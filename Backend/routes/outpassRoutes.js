@@ -1,33 +1,33 @@
-// backend/routes/outpassRoutes.js
-const express = require("express");
-const router  = express.Router();
-
+const express        = require("express");
+const router         = express.Router();
 const {
   applyOutpass,
   getStudentOutpasses,
   getOutpassById,
   getParentOutpasses,
-  approveOutpass,
-  rejectOutpass,
-  verifyWithMedia, uploadMedia,       // ← new
-  adminGetAllOutpasses,               // ← new (see step 5)
+  verifyWithMedia,
+  uploadMedia,
+  adminGetAllOutpasses,
   adminFinalDecision,
 } = require("../controllers/outpassController");
-
 const protect        = require("../middleware/authMiddleware");
 const authorizeRoles = require("../middleware/roleMiddleware");
 
-// ── Protected student routes ──────────────────────────────────────────────────
-router.post("/apply",       protect, authorizeRoles("student"), applyOutpass);
-router.get("/my-passes",    protect, authorizeRoles("student"), getStudentOutpasses);
-router.get("/parent-passes",protect, authorizeRoles("parent"),  getParentOutpasses);
+// Student
+router.post("/apply",         protect, authorizeRoles("student"), applyOutpass);
+router.get("/my-passes",      protect, authorizeRoles("student"), getStudentOutpasses);
 
+// Parent
+router.get("/parent-passes",  protect, authorizeRoles("parent"),  getParentOutpasses);
 
-router.post("/verify/:id", uploadMedia, verifyWithMedia);
+// Parent verify — PUBLIC (no protect), uses multer uploadMedia
+router.post("/verify/:id",    uploadMedia, verifyWithMedia);
 
+// Admin
+router.get("/admin/all",           protect, authorizeRoles("admin"), adminGetAllOutpasses);
+router.patch("/admin/decision/:id",protect, authorizeRoles("admin"), adminFinalDecision);
 
-
-// ── Wildcard — must be last ───────────────────────────────────────────────────
-router.get("/:id", protect, authorizeRoles("student"), getOutpassById);
+// Wildcard — MUST stay last
+router.get("/:id",            protect, authorizeRoles("student"), getOutpassById);
 
 module.exports = router;

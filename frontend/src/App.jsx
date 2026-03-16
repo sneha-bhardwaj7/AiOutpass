@@ -20,6 +20,7 @@ import ParentOTPVerify from './pages/ParentOTPVerify';
 import ParentApproval from './pages/ParentApproval';
 import NotFound from './pages/NotFound';
 import ParentVerifyPage from "./pages/ParentVerifyPage";
+import AdminParents from './pages/AdminParents';
 
 
 
@@ -62,7 +63,7 @@ const AppRoutes = () => (
     <Route path="/admin/analytics"    element={<ProtectedRoute requiredRole="admin"><AdminAnalytics /></ProtectedRoute>} />
     <Route path="/admin/audit-logs"   element={<ProtectedRoute requiredRole="admin"><AuditLogs /></ProtectedRoute>} />
     <Route path="/admin/profile"      element={<ProtectedRoute requiredRole="admin"><AdminProfile /></ProtectedRoute>} />
-
+    <Route path="/admin/parents"      element={<ProtectedRoute requiredRole="admin"><AdminParents /></ProtectedRoute>} />
     {/* Parent Routes — public, no auth needed */}
     <Route path="/parent/verify"  element={<ParentOTPVerify />} />
     <Route path="/parent/approve" element={<ParentApproval />} />

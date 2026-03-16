@@ -1,6 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
-  FiGrid, FiList, FiBarChart2, FiFileText, FiLogOut, FiShield, FiSettings, FiUser
+  FiGrid, FiList, FiBarChart2, FiFileText, FiLogOut, FiShield, FiSettings, FiUsers
 } from 'react-icons/fi';
 import { MdOutlineSchool } from 'react-icons/md';
 import { useAuth } from '../context/AuthContext';
@@ -19,7 +19,8 @@ const AdminSidebar = () => {
     { to: '/admin/requests', label: 'All Requests', icon: FiList },
     { to: '/admin/analytics', label: 'Analytics', icon: FiBarChart2 },
     { to: '/admin/audit-logs', label: 'Audit Logs', icon: FiFileText },
-    { to: '/admin/profile', label: 'My Profile', icon: FiUser },
+    { to: '/admin/profile', label: 'My Profile', icon: FiUsers },
+    { to: '/admin/parents', label: 'Parents', icon: FiUsers },
   ];
 
   return (

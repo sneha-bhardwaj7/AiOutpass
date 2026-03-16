@@ -1,64 +1,76 @@
 // backend/controllers/outpassController.js
-const Outpass = require("../models/Outpass");
-const User    = require("../models/User");
-const axios   = require("axios");
-const multer = require("multer");
-const path   = require("path");
-const fs     = require("fs");
-
+const Outpass    = require("../models/Outpass");
+const User       = require("../models/User");
+const axios      = require("axios");
+const multer     = require("multer");
+const cloudinary = require("../config/cloudinary");
 
 const N8N_WEBHOOK = process.env.N8N_WEBHOOK_URL || "http://localhost:5678/webhook/outpass-request";
-const BASE_URL    = process.env.BASE_URL         || "http://localhost:5000";
 
-// Multer storage config — save to /uploads folder
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const dir = path.join(__dirname, "../uploads");
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    cb(null, dir);
-  },
-  filename: (req, file, cb) => {
-    const ext = file.mimetype.includes("video") ? ".webm" : ".jpg";
-    cb(null, `${file.fieldname}-${req.params.id}-${Date.now()}${ext}`);
-  },
-});
-const upload = multer({ storage });
+const storage = multer.memoryStorage();
+const upload  = multer({ storage });
 
-// Controller: parent submits photo + video after clicking approve/reject link
 exports.verifyWithMedia = async (req, res) => {
   try {
     const outpass = await Outpass.findById(req.params.id);
-    if (!outpass) return res.status(404).json({ message: "Not found" });
-    if (outpass.status !== "pending")
-      return res.status(400).json({ message: "Already processed" });
+    if (!outpass)
+      return res.status(404).json({ message: "Outpass not found" });
 
-    const { decision } = req.body; // "approved" or "rejected"
+    // Allow retry unless admin already made final decision
+    if (outpass.status === "approved" || outpass.status === "rejected")
+      return res.status(400).json({ message: "This outpass has already been finalized by admin." });
+
+    const { decision } = req.body;
     const photo = req.files?.photo?.[0];
     const video = req.files?.video?.[0];
 
     if (!decision || !photo || !video)
-      return res.status(400).json({ message: "Photo, video and decision are required" });
+      return res.status(400).json({ message: "Photo, video and decision are all required." });
+
+    // Verify Cloudinary is configured before attempting upload
+    if (!process.env.CLOUDINARY_API_KEY) {
+      console.error("❌ CLOUDINARY_API_KEY is missing from .env");
+      return res.status(500).json({ message: "Server configuration error: Cloudinary not configured." });
+    }
+
+    // Upload photo
+    const photoUrl = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { folder: "outpass/parent-photos", resource_type: "image" },
+        (error, result) => (error ? reject(error) : resolve(result.secure_url))
+      );
+      stream.end(photo.buffer);
+    });
+
+    // Upload video
+    const videoUrl = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { folder: "outpass/parent-videos", resource_type: "video" },
+        (error, result) => (error ? reject(error) : resolve(result.secure_url))
+      );
+      stream.end(video.buffer);
+    });
 
     await Outpass.findByIdAndUpdate(req.params.id, {
       parentDecision:  decision,
-      parentPhotoPath: photo.path,
-      parentVideoPath: video.path,
+      parentPhotoPath: photoUrl,
+      parentVideoPath: videoUrl,
       verifiedAt:      new Date(),
-      status:          "pending-admin",  // Waiting for admin final call
+      status:          "pending-admin",
     });
 
-    return res.json({ message: "Verification submitted. Awaiting admin review." });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.json({ message: "Verification submitted successfully", photoUrl, videoUrl });
+
+  } catch (error) {
+    console.error("verifyWithMedia error:", error.message);
+    res.status(500).json({ message: error.message });
   }
 };
 
-// Export the multer middleware too
 exports.uploadMedia = upload.fields([
   { name: "photo", maxCount: 1 },
   { name: "video", maxCount: 1 },
 ]);
-
 // ── Apply for outpass ─────────────────────────────────────────────────────────
 exports.applyOutpass = async (req, res) => {
   try {
@@ -81,9 +93,8 @@ exports.applyOutpass = async (req, res) => {
     if (!parentRelation) missing.push("parentRelation");
     if (!parentContact)  missing.push("parentContact");
 
-    if (missing.length) {
+    if (missing.length)
       return res.status(400).json({ message: `Missing required fields: ${missing.join(", ")}` });
-    }
 
     const outpass = await Outpass.create({
       student: req.user._id,
@@ -94,15 +105,14 @@ exports.applyOutpass = async (req, res) => {
       parentRelation, parentContact, parentEmail,
     });
 
-    // Fire n8n webhook (non-blocking) — n8n sends email/WhatsApp/voice with these links
     axios.post(N8N_WEBHOOK, {
-      outpassId:    outpass._id.toString(),
+      outpassId: outpass._id.toString(),
       studentName, studentId, hostelRoom,
       destination, reason,
       leaveDateFrom, leaveDateTo,
       parentEmail, parentContact, parentRelation,
-      approveUrl: `${BASE_URL}/api/outpass/approve/${outpass._id}`,
-      rejectUrl:  `${BASE_URL}/api/outpass/reject/${outpass._id}`,
+      approveUrl: `${process.env.FRONTEND_URL}/verify/${outpass._id}?decision=approved`,
+      rejectUrl:  `${process.env.FRONTEND_URL}/verify/${outpass._id}?decision=rejected`,
     }).catch((err) => console.warn("n8n webhook failed:", err.message));
 
     return res.status(201).json({ message: "Outpass request submitted successfully", outpass });
@@ -146,10 +156,10 @@ exports.getParentOutpasses = async (req, res) => {
   }
 };
 
-  // Get all outpasses — especially those in "pending-admin" state
+// ── Admin: get all outpasses ──────────────────────────────────────────────────
 exports.adminGetAllOutpasses = async (req, res) => {
   try {
-    const { status } = req.query; // ?status=pending-admin
+    const { status } = req.query;
     const filter = status ? { status } : {};
     const outpasses = await Outpass.find(filter)
       .populate("student", "name email")
@@ -160,10 +170,10 @@ exports.adminGetAllOutpasses = async (req, res) => {
   }
 };
 
-// Admin makes final approve/reject after reviewing media
+// ── Admin: final approve / reject ─────────────────────────────────────────────
 exports.adminFinalDecision = async (req, res) => {
   try {
-    const { decision, adminNote } = req.body; // "approved" or "rejected"
+    const { decision, adminNote } = req.body;
     if (!["approved", "rejected"].includes(decision))
       return res.status(400).json({ message: "Invalid decision" });
 
@@ -174,7 +184,6 @@ exports.adminFinalDecision = async (req, res) => {
     );
     if (!outpass) return res.status(404).json({ message: "Not found" });
 
-    // Optionally fire n8n to notify student
     axios.post(N8N_WEBHOOK, {
       event: "admin-decision",
       outpassId: outpass._id,

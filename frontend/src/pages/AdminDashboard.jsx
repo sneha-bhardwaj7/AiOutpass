@@ -18,20 +18,21 @@ export default function AdminDashboard() {
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchAll = async () => {
-    try {
-      const [statsData, requestsData] = await Promise.all([
-        analyticsAPI.getDashboardStats(),
-        outpassAPI.getAll({ limit: 10, sort: "-createdAt" }),
-      ]);
-      setStats(statsData);
-      setRecent(requestsData.requests || []);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
+  try {
+    const [statsData, requestsData] = await Promise.all([
+      analyticsAPI.getDashboardStats(),
+      outpassAPI.getAll(),
+    ]);
+    setStats(statsData);
+    // Only show 5 most recent on dashboard
+    setRecent((requestsData.requests || []).slice(0, 5));
+  } catch (err) {
+    console.error(err);
+  } finally {
+    setLoading(false);
+    setRefreshing(false);
+  }
+};
 
   useEffect(() => { fetchAll(); }, []);
 
