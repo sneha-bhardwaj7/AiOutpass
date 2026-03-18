@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   FiUser, FiMail, FiLock, FiEye, FiEyeOff, FiArrowRight,
@@ -6,207 +6,263 @@ import {
 } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
 
-const AdminSignup = () => {
-  const [form, setForm] = useState({
-    name: '', 
-    email: '', 
-    password: '', 
-    confirmPassword: '',
-  });
+/* ─── Color Tokens ─── */
+const C = {
+  inkBlack:    '#080C14',
+  navyDeep:    '#0A1628',
+  navyMid:     '#0F2347',
+  tealDeep:    '#0D4F4F',
+  tealMid:     '#0A7C7C',
+  tealBright:  '#0FB5B5',
+  amber:       '#E8A020',
+  amberLight:  '#F5BE58',
+  slateGlass:  'rgba(255,255,255,0.04)',
+  slateBorder: 'rgba(255,255,255,0.08)',
+  slateText:   'rgba(220,230,255,0.55)',
+  slateLight:  'rgba(220,230,255,0.75)',
+  white:       '#F0F6FF',
+};
 
+/* ─── Field Component ─── */
+function Field({ label, icon: Icon, type = 'text', value, onChange, placeholder, error, success, rightEl }) {
+  const [focused, setFocused] = useState(false);
+  return (
+    <div>
+      <label style={{
+        display: 'block', fontSize: 10, fontWeight: 600, letterSpacing: 3,
+        textTransform: 'uppercase', color: focused ? C.tealBright : C.slateText,
+        marginBottom: 8, fontFamily: 'DM Mono, monospace', transition: 'color 0.2s',
+      }}>{label}</label>
+      <div style={{ position: 'relative' }}>
+        <div style={{
+          position: 'absolute', left: 15, top: '50%', transform: 'translateY(-50%)',
+          color: focused ? C.tealBright : 'rgba(220,230,255,0.28)',
+          transition: 'color 0.25s', pointerEvents: 'none',
+        }}>
+          <Icon size={15} />
+        </div>
+        <input
+          type={type} value={value} onChange={onChange} placeholder={placeholder}
+          onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
+          style={{
+            width: '100%',
+            padding: rightEl ? '13px 46px 13px 44px' : '13px 16px 13px 44px',
+            borderRadius: 12,
+            border: `1.5px solid ${error ? '#ef4444' : success ? '#10b981' : focused ? C.tealBright : 'rgba(255,255,255,0.1)'}`,
+            background: focused ? 'rgba(11,181,181,0.06)' : 'rgba(255,255,255,0.04)',
+            color: C.white, fontSize: 14, fontFamily: 'DM Sans, sans-serif', outline: 'none',
+            transition: 'all 0.25s',
+            boxShadow: focused ? `0 0 0 3px rgba(11,181,181,0.12)` : error ? `0 0 0 3px rgba(239,68,68,0.1)` : 'none',
+          }}
+        />
+        {rightEl && (
+          <div style={{ position: 'absolute', right: 13, top: '50%', transform: 'translateY(-50%)' }}>
+            {rightEl}
+          </div>
+        )}
+      </div>
+      {error && (
+        <p style={{ fontSize: 11, color: '#f87171', marginTop: 5, fontFamily: 'DM Sans, sans-serif', display: 'flex', alignItems: 'center', gap: 4 }}>
+          <FiAlertCircle size={11} /> {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/* ─── Password Strength ─── */
+function StrengthBar({ password }) {
+  const getStrength = () => {
+    if (!password) return 0;
+    let s = 0;
+    if (password.length >= 8) s++;
+    if (/[A-Z]/.test(password)) s++;
+    if (/[0-9]/.test(password)) s++;
+    if (/[^A-Za-z0-9]/.test(password)) s++;
+    return s;
+  };
+  const s = getStrength();
+  const labels = ['', 'Weak', 'Fair', 'Good', 'Strong'];
+  const colors = ['', '#ef4444', '#f59e0b', '#60a5fa', '#10b981'];
+  if (!password) return null;
+  return (
+    <div style={{ marginTop: 8 }}>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 5 }}>
+        {[1, 2, 3, 4].map(i => (
+          <div key={i} style={{ flex: 1, height: 3, borderRadius: 2, background: i <= s ? colors[s] : 'rgba(255,255,255,0.08)', transition: 'background 0.3s', boxShadow: i <= s ? `0 0 8px ${colors[s]}80` : 'none' }} />
+        ))}
+      </div>
+      <span style={{ fontSize: 11, color: colors[s], fontFamily: 'DM Mono, monospace', fontWeight: 500 }}>
+        {labels[s]} password
+      </span>
+    </div>
+  );
+}
+
+/* ─── Main ─── */
+const AdminSignup = () => {
+  const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '' });
   const [showPass, setShowPass] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
+  const [mounted, setMounted] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  useEffect(() => { const t = setTimeout(() => setMounted(true), 80); return () => clearTimeout(t); }, []);
+
   const set = (field) => (e) => setForm(p => ({ ...p, [field]: e.target.value }));
 
-  const passwordStrength = () => {
-    const p = form.password;
-    if (!p) return 0;
-    let s = 0;
-    if (p.length >= 8) s++;
-    if (/[A-Z]/.test(p)) s++;
-    if (/[0-9]/.test(p)) s++;
-    if (/[^A-Za-z0-9]/.test(p)) s++;
-    return s;
-  };
-
-  const strength = passwordStrength();
-  const strengthLabel = ['', 'Weak', 'Fair', 'Good', 'Strong'];
-  const strengthColor = ['', 'bg-red-400', 'bg-amber-400', 'bg-blue-400', 'bg-emerald-500'];
-
-  const canSubmit =
-    form.name &&
-    form.email &&
-    form.password &&
-    form.password === form.confirmPassword &&
-    form.password.length >= 8;
+  const canSubmit = form.name && form.email && form.password.length >= 8 && form.password === form.confirmPassword;
 
   const handleSubmit = async () => {
-    if (!canSubmit) return;
-
-    setLoading(true);
-    setError('');
-
+    if (!canSubmit || loading) return;
+    setLoading(true); setError('');
     try {
-      // ✅ FIX: Only send fields that backend expects
-      const payload = {
-        name: form.name.trim(),
-        email: form.email.trim().toLowerCase(),
-        password: form.password,
-      };
-
-      console.log('📤 Admin signup request:', payload);
-
-      const res = await fetch('http://localhost:5000/api/auth/admin/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
+      const payload = { name: form.name.trim(), email: form.email.trim().toLowerCase(), password: form.password };
+      const res = await fetch('http://localhost:5000/api/auth/admin/signup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       const data = await res.json();
-      console.log('📥 Admin signup response:', data);
-
       if (!res.ok) throw new Error(data.message || 'Signup failed');
-
-      // ✅ Store token
       localStorage.setItem('token', data.token);
-
-      // ✅ Create user object matching backend response
-      const user = {
-        _id: data.id,
-        name: data.name,
-        email: data.email,
-        role: data.role,
-      };
-
-      login(user, data.role, data.token);
+      login({ _id: data.id, name: data.name, email: data.email, role: data.role }, data.role, data.token);
       navigate('/admin/dashboard');
-
-    } catch (err) {
-      console.error('❌ Admin signup error:', err);
-      setError(err.message || 'Signup failed.');
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { setError(err.message || 'Signup failed.'); }
+    finally { setLoading(false); }
   };
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden"
-      style={{
-        fontFamily: "'Crimson Pro', serif",
-        background: "linear-gradient(135deg, var(--cream-warm) 0%, var(--cream) 100%)"
-      }}
-    >
-      {/* Floating blobs */}
-      <div className="absolute -top-32 -left-32 w-96 h-96 bg-[var(--cream-deep)] opacity-40 blur-3xl blob-morph"></div>
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-[var(--burgundy-light)] opacity-20 blur-3xl blob-morph"></div>
+    <div style={{
+      minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      background: `linear-gradient(170deg, ${C.inkBlack} 0%, ${C.navyDeep} 50%, #050E1F 100%)`,
+      fontFamily: 'DM Sans, sans-serif', padding: '40px 24px', position: 'relative', overflow: 'hidden',
+    }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=DM+Mono:wght@400;500&display=swap');
+        * { box-sizing: border-box; }
+        input::placeholder { color: rgba(220,230,255,0.28) !important; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes floatOrb1 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-20px,16px)} }
+        @keyframes floatOrb2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(18px,-14px)} }
+        @keyframes pulseShield { 0%,100%{box-shadow:0 0 24px rgba(232,160,32,0.3)} 50%{box-shadow:0 0 40px rgba(232,160,32,0.5)} }
+      `}</style>
 
-      {/* Floating particles */}
-      <div className="particle w-3 h-3 bg-[var(--gold)] left-[20%] top-[70%]" style={{ animationDuration: "9s" }}></div>
-      <div className="particle w-2 h-2 bg-[var(--burgundy-light)] left-[60%] top-[80%]" style={{ animationDuration: "11s" }}></div>
+      {/* Background */}
+      <div style={{ position: 'absolute', top: '-8%', right: '-4%', width: 480, height: 480, borderRadius: '50%', background: `radial-gradient(circle, rgba(11,181,181,0.07) 0%, transparent 60%)`, animation: 'floatOrb1 10s ease-in-out infinite', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', bottom: '-8%', left: '-4%', width: 420, height: 420, borderRadius: '50%', background: `radial-gradient(circle, rgba(232,160,32,0.07) 0%, transparent 65%)`, animation: 'floatOrb2 12s ease-in-out infinite', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', inset: 0, backgroundImage: `linear-gradient(rgba(11,181,181,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(11,181,181,0.03) 1px,transparent 1px)`, backgroundSize: '64px 64px', pointerEvents: 'none', opacity: 0.4 }} />
 
-      <div className="relative z-10 w-full max-w-lg anim-fade-up">
+      <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 460, opacity: mounted ? 1 : 0, transform: mounted ? 'translateY(0)' : 'translateY(20px)', transition: 'all 0.7s cubic-bezier(0.22,1,0.36,1)' }}>
+
         {/* Logo */}
-        <div className="flex items-center justify-center gap-3 mb-8">
-          <div className="w-11 h-11 grad-burgundy rounded-xl flex items-center justify-center shadow-lg glow-burgundy">
-            <FiShield size={22} className="text-white" />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 36 }}>
+          <div style={{ width: 42, height: 42, borderRadius: 11, background: `linear-gradient(135deg, ${C.tealMid}, ${C.tealBright})`, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 0 24px rgba(11,181,181,0.4)` }}>
+            <FiShield size={20} color="#fff" />
           </div>
-          <span className="text-2xl font-black font-display text-[var(--text-dark)]">
-            Pass<span className="grad-text-gold">WithAI</span>
+          <span style={{ fontFamily: 'Space Grotesk, sans-serif', fontWeight: 700, fontSize: 24, color: C.white, letterSpacing: -0.5 }}>
+            Pass<span style={{ color: C.tealBright }}>Gate</span>
+            <span style={{ color: C.slateText, fontWeight: 300 }}> AI</span>
           </span>
         </div>
 
         {/* Card */}
-        <div className="glass-card rounded-3xl p-8 card-lift">
-          <div className="mb-7">
-            <h1 className="text-2xl font-black font-display text-[var(--text-dark)]">
-              Admin Registration
-            </h1>
-            <p className="text-[var(--text-soft)] text-sm mt-1">
-              Create an authorized administrator account
+        <div style={{
+          background: 'rgba(15,22,48,0.72)', backdropFilter: 'blur(24px)', borderRadius: 24,
+          border: `1px solid rgba(232,160,32,0.15)`,
+          boxShadow: `0 24px 80px rgba(0,0,0,0.45), inset 0 1px 0 rgba(232,160,32,0.08)`,
+          padding: '40px 36px 34px', position: 'relative',
+        }}>
+          {/* Amber accent top line */}
+          <div style={{ position: 'absolute', top: 0, left: '10%', right: '10%', height: 2, background: `linear-gradient(90deg, transparent, ${C.amberLight}70, transparent)`, borderRadius: 2 }} />
+
+          {/* Header */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 28 }}>
+            <div style={{
+              width: 52, height: 52, borderRadius: 14, flexShrink: 0,
+              background: `linear-gradient(135deg, rgba(13,79,79,0.8), rgba(10,118,118,0.6))`,
+              border: `1.5px solid rgba(232,160,32,0.3)`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              animation: 'pulseShield 3s ease-in-out infinite',
+            }}>
+              <FiShield size={24} color={C.amberLight} />
+            </div>
+            <div>
+              <h1 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 26, fontWeight: 800, color: C.white, letterSpacing: -0.7, lineHeight: 1.1, marginBottom: 4 }}>
+                Admin Registration
+              </h1>
+              <p style={{ fontSize: 13, color: C.slateText, fontFamily: 'DM Sans, sans-serif', lineHeight: 1.5 }}>
+                Create an authorized administrator account
+              </p>
+            </div>
+          </div>
+
+          {/* Warning badge */}
+          <div style={{
+            marginBottom: 24, padding: '11px 15px', borderRadius: 11,
+            background: `rgba(232,160,32,0.07)`, border: `1px solid rgba(232,160,32,0.18)`,
+            display: 'flex', alignItems: 'center', gap: 10,
+          }}>
+            <FiShield size={13} style={{ color: C.amberLight, flexShrink: 0 }} />
+            <p style={{ fontSize: 12, color: 'rgba(245,190,88,0.75)', fontFamily: 'DM Sans, sans-serif', lineHeight: 1.5, margin: 0 }}>
+              Admin accounts require institutional approval. Unauthorized access is prohibited.
             </p>
           </div>
 
-          {/* Error */}
           {error && (
-            <div className="mb-5 p-4 rounded-xl bg-red-100 border border-red-200 text-red-600 text-sm flex gap-2">
-              <FiAlertCircle size={16} />
-              {error}
+            <div style={{ marginBottom: 20, padding: '12px 16px', borderRadius: 12, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+              <FiAlertCircle size={15} color="#f87171" style={{ flexShrink: 0, marginTop: 1 }} />
+              <span style={{ fontSize: 13, color: '#f87171', fontFamily: 'DM Sans, sans-serif', lineHeight: 1.5 }}>{error}</span>
             </div>
           )}
 
-          <div className="space-y-4">
-            <DarkField label="Full Name" icon={FiUser} type="text" value={form.name} onChange={set('name')} placeholder="Admin name" />
-            <DarkField label="Email Address" icon={FiMail} type="email" value={form.email} onChange={set('email')} placeholder="admin@institution.edu" />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <Field label="Full Name" icon={FiUser} value={form.name} onChange={set('name')} placeholder="Admin full name" />
+            <Field label="Email Address" icon={FiMail} type="email" value={form.email} onChange={set('email')} placeholder="admin@institution.edu" />
 
-            {/* Password */}
             <div>
-              <label className="block text-sm font-semibold text-[var(--text-mid)] mb-1.5">
-                Password
-              </label>
-              <div className="relative">
-                <FiLock size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-soft)]" />
-                <input
-                  type={showPass ? 'text' : 'password'}
-                  value={form.password}
-                  onChange={set('password')}
-                  placeholder="Min. 8 characters"
-                  className="input-premium pl-10 pr-10"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPass(p => !p)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2"
-                >
-                  {showPass ? <FiEyeOff size={14} /> : <FiEye size={14} />}
-                </button>
-              </div>
-              {form.password && (
-                <div className="mt-2 flex gap-1 items-center">
-                  {[1,2,3,4].map(i => (
-                    <div
-                      key={i}
-                      className={`flex-1 h-1 rounded-full ${i<=strength ? strengthColor[strength] : "bg-gray-200"}`}
-                    />
-                  ))}
-                  <span className="text-xs ml-2">{strengthLabel[strength]}</span>
-                </div>
-              )}
+              <Field label="Password" icon={FiLock} type={showPass ? 'text' : 'password'} value={form.password} onChange={set('password')} placeholder="Min. 8 characters"
+                rightEl={
+                  <button type="button" onClick={() => setShowPass(p => !p)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(220,230,255,0.35)', padding: 0, display: 'flex' }}>
+                    {showPass ? <FiEyeOff size={15} /> : <FiEye size={15} />}
+                  </button>
+                } />
+              <StrengthBar password={form.password} />
             </div>
 
-            {/* Confirm Password */}
-            <DarkField label="Confirm Password" icon={FiLock} type="password" value={form.confirmPassword} onChange={set('confirmPassword')} placeholder="Re-enter password" />
+            <Field label="Confirm Password" icon={FiLock} type={showConfirm ? 'text' : 'password'} value={form.confirmPassword} onChange={set('confirmPassword')} placeholder="Re-enter password"
+              error={form.confirmPassword && form.password !== form.confirmPassword ? "Passwords don't match" : ''}
+              success={form.confirmPassword && form.password === form.confirmPassword}
+              rightEl={
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  {form.confirmPassword && form.password === form.confirmPassword && <FiCheckCircle size={14} color="#10b981" />}
+                  <button type="button" onClick={() => setShowConfirm(p => !p)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(220,230,255,0.35)', padding: 0, display: 'flex' }}>
+                    {showConfirm ? <FiEyeOff size={15} /> : <FiEye size={15} />}
+                  </button>
+                </div>
+              } />
 
-            {/* Button */}
-            <button
-              onClick={handleSubmit}
-              disabled={!canSubmit || loading}
-              className="w-full py-3.5 grad-burgundy text-white rounded-xl font-bold flex items-center justify-center gap-2 btn-magnetic"
-            >
+            <button onClick={handleSubmit} disabled={!canSubmit || loading} style={{
+              width: '100%', marginTop: 8, padding: '14px 20px', borderRadius: 12, border: 'none',
+              cursor: canSubmit && !loading ? 'pointer' : 'not-allowed',
+              background: canSubmit && !loading ? `linear-gradient(135deg, ${C.tealMid}, ${C.tealBright})` : 'rgba(255,255,255,0.07)',
+              color: canSubmit && !loading ? '#fff' : 'rgba(220,230,255,0.25)',
+              fontSize: 15, fontWeight: 700, fontFamily: 'DM Sans, sans-serif',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9,
+              boxShadow: canSubmit && !loading ? `0 8px 28px rgba(11,181,181,0.3)` : 'none',
+              transition: 'all 0.28s',
+            }}
+              onMouseEnter={e => { if (canSubmit && !loading) { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = `0 14px 36px rgba(11,181,181,0.45)`; }}}
+              onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = canSubmit ? `0 8px 28px rgba(11,181,181,0.3)` : 'none'; }}>
               {loading
-                ? <>
-                    <FiLoader className="animate-spin" size={14}/>
-                    Registering...
-                  </>
-                : <>
-                    Register Admin Account
-                    <FiArrowRight size={14}/>
-                  </>
-              }
+                ? <><FiLoader size={15} style={{ animation: 'spin 1s linear infinite' }} /> Registering…</>
+                : <><FiCheckCircle size={15} /> Register Admin Account <FiArrowRight size={15} /></>}
             </button>
           </div>
 
-          <div className="mt-6 text-center">
-            <p className="text-[var(--text-soft)] text-sm">
-              Already registered?{" "}
-              <Link to="/admin/login" className="text-[var(--burgundy)] font-semibold">
-                Sign in
-              </Link>
+          <div style={{ marginTop: 26, paddingTop: 20, borderTop: `1px solid rgba(255,255,255,0.07)`, textAlign: 'center' }}>
+            <p style={{ fontSize: 13, color: C.slateText, fontFamily: 'DM Sans, sans-serif' }}>
+              Already registered?{' '}
+              <Link to="/admin/login" style={{ color: C.tealBright, fontWeight: 700, textDecoration: 'none' }}>Sign in</Link>
             </p>
           </div>
         </div>
@@ -214,23 +270,5 @@ const AdminSignup = () => {
     </div>
   );
 };
-
-const DarkField = ({ label, icon: Icon, type, value, onChange, placeholder }) => (
-  <div>
-    <label className="block text-sm font-semibold text-[var(--text-mid)] mb-1.5">
-      {label}
-    </label>
-    <div className="relative">
-      <Icon size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-soft)]" />
-      <input
-        type={type}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        className="input-premium pl-10"
-      />
-    </div>
-  </div>
-);
 
 export default AdminSignup;

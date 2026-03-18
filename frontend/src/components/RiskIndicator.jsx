@@ -4,33 +4,36 @@ import { AlertTriangle, CheckCircle, AlertCircle, Info } from "lucide-react";
 const riskConfig = {
   low: {
     label: "Low Risk",
-    icon: <CheckCircle size={14} />,
-    bar: "bg-green-400",
+    icon: <CheckCircle size={12} />,
+    barColor: '#10b981',
     barWidth: "33%",
-    text: "text-green-600",
-    bg: "bg-green-50",
-    border: "border-green-200",
+    textColor: '#065f46',
+    bgColor: '#ecfdf5',
+    dotColor: '#10b981',
     score: 20,
+    pillBorder: 'rgba(16,185,129,0.25)',
   },
   medium: {
-    label: "Medium Risk",
-    icon: <AlertCircle size={14} />,
-    bar: "bg-amber-400",
+    label: "Med Risk",
+    icon: <AlertCircle size={12} />,
+    barColor: '#f59e0b',
     barWidth: "66%",
-    text: "text-amber-600",
-    bg: "bg-amber-50",
-    border: "border-amber-200",
+    textColor: '#78350f',
+    bgColor: '#fffbeb',
+    dotColor: '#f59e0b',
     score: 55,
+    pillBorder: 'rgba(245,158,11,0.25)',
   },
   high: {
     label: "High Risk",
-    icon: <AlertTriangle size={14} />,
-    bar: "bg-red-500",
+    icon: <AlertTriangle size={12} />,
+    barColor: '#ef4444',
     barWidth: "100%",
-    text: "text-red-600",
-    bg: "bg-red-50",
-    border: "border-red-200",
+    textColor: '#7f1d1d',
+    bgColor: '#fef2f2',
+    dotColor: '#ef4444',
     score: 85,
+    pillBorder: 'rgba(239,68,68,0.25)',
   },
 };
 
@@ -40,40 +43,68 @@ export default function RiskIndicator({ level = "low", score, reasons = [], comp
 
   if (compact) {
     return (
-      <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border ${config.bg} ${config.text} ${config.border}`}>
-        {config.icon}
+      <span style={{
+        display: 'inline-flex', alignItems: 'center', gap: '4px',
+        fontSize: '10px', fontWeight: 700, padding: '3px 8px',
+        borderRadius: '20px', fontFamily: 'sans-serif',
+        background: config.bgColor,
+        color: config.textColor,
+        border: `1px solid ${config.pillBorder}`,
+        letterSpacing: '0.02em',
+      }}>
+        <span style={{ color: config.dotColor, display: 'flex', alignItems: 'center' }}>
+          {config.icon}
+        </span>
         {config.label}
       </span>
     );
   }
 
   return (
-    <div className={`rounded-xl border p-4 ${config.bg} ${config.border}`}>
-      <div className="flex items-center justify-between mb-3">
-        <div className={`flex items-center gap-2 font-semibold text-sm ${config.text}`}>
-          {config.icon}
+    <div style={{
+      borderRadius: '16px', padding: '16px',
+      background: config.bgColor,
+      border: `1px solid ${config.pillBorder}`,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '6px',
+          fontWeight: 700, fontSize: '13px', color: config.textColor, fontFamily: 'sans-serif',
+        }}>
+          <span style={{ color: config.barColor }}>{config.icon}</span>
           AI Risk Analysis — {config.label}
         </div>
-        <span className={`text-lg font-bold font-mono ${config.text}`}>
+        <span style={{
+          fontSize: '20px', fontWeight: 700, fontFamily: 'monospace',
+          color: config.textColor,
+        }}>
           {displayScore}
-          <span className="text-xs font-normal opacity-60">/100</span>
+          <span style={{ fontSize: '11px', opacity: 0.5, fontWeight: 400 }}>/100</span>
         </span>
       </div>
 
-      {/* Risk Bar */}
-      <div className="h-2 bg-white/60 rounded-full overflow-hidden mb-3">
-        <div
-          className={`h-full ${config.bar} rounded-full transition-all duration-700`}
-          style={{ width: config.barWidth }}
-        ></div>
+      {/* Segmented risk bar */}
+      <div style={{
+        height: '6px', background: 'rgba(255,255,255,0.6)',
+        borderRadius: '20px', overflow: 'hidden', marginBottom: '12px',
+      }}>
+        <div style={{
+          height: '100%', width: config.barWidth,
+          background: config.barColor,
+          borderRadius: '20px',
+          transition: 'width 0.7s ease',
+        }} />
       </div>
 
-      {/* Reasons */}
       {reasons.length > 0 && (
-        <ul className="space-y-1">
+        <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '5px' }}>
           {reasons.map((reason, i) => (
-            <li key={i} className={`flex items-start gap-1.5 text-xs ${config.text} opacity-80`}>
-              <Info size={11} className="mt-0.5 flex-shrink-0" />
+            <li key={i} style={{
+              display: 'flex', alignItems: 'flex-start', gap: '5px',
+              fontSize: '11px', color: config.textColor, opacity: 0.75,
+              fontFamily: 'sans-serif',
+            }}>
+              <Info size={10} style={{ marginTop: '2px', flexShrink: 0 }} />
               {reason}
             </li>
           ))}

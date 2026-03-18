@@ -7,7 +7,7 @@ import {
 import StudentLayout from '../components/StudentLayout';
 import { useAuth } from '../context/AuthContext';
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
 const StudentProfile = () => {
   const { user, login, role } = useAuth();

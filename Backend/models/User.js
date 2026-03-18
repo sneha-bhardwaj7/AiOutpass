@@ -25,7 +25,16 @@ required:true
 
 studentId:String,
 hostelRoom:String,
-phone:String,
+phone: { type: String, default: "" },
+
+avatar: { type: String, default: "" },
+bio: { type: String, default: "" },
+designation: { type: String, default: "" },
+department: { type: String, default: "" },
+
+collegeId: { type: String, default: "" },
+year: { type: String, default: "" },
+
 relation:String,
 
 // 🔗 Parent linked to a student

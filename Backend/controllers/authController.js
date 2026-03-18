@@ -1,6 +1,8 @@
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const generateToken = require("../utils/generateToken");
+const path = require("path");
+const fs = require("fs");
 
 // STUDENT SIGNUP
 exports.studentSignup = async (req, res) => {
@@ -139,6 +141,117 @@ exports.loginUser = async (req, res) => {
 
   } catch (error) {
     console.error("Login error:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// UPDATE ADMIN PROFILE
+exports.updateAdminProfile = async (req, res) => {
+  try {
+    const { name, email, phone, bio, designation, department } = req.body;
+
+    const updateData = { name, email, phone, bio, designation, department };
+
+    // If a new avatar was uploaded
+    if (req.file) {
+      updateData.avatar = `/uploads/${req.file.filename}`;
+    }
+
+    const updatedAdmin = await User.findByIdAndUpdate(
+      req.user._id,
+      { $set: updateData },
+      { new: true, runValidators: true }
+    ).select("-password");
+
+    if (!updatedAdmin) {
+      return res.status(404).json({ message: "Admin not found" });
+    }
+
+    res.json({
+      admin: updatedAdmin,
+      message: "Profile updated successfully"
+    });
+  } catch (error) {
+    console.error("Update admin profile error:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// CHANGE ADMIN PASSWORD
+exports.changeAdminPassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Current password is incorrect" });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+    await user.save();
+
+    res.json({ message: "Password changed successfully" });
+  } catch (error) {
+    console.error("Change password error:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// UPDATE STUDENT PROFILE
+exports.updateStudentProfile = async (req, res) => {
+  try {
+    const { name, email, phone, bio, collegeId, hostelRoom, department, year } = req.body;
+
+    const updateData = { name, email, phone, bio, collegeId, hostelRoom, department, year };
+
+    if (req.file) {
+      updateData.avatar = `/uploads/${req.file.filename}`;
+    }
+
+    const updatedStudent = await User.findByIdAndUpdate(
+      req.user._id,
+      { $set: updateData },
+      { new: true, runValidators: true }
+    ).select("-password");
+
+    if (!updatedStudent) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    res.json({
+      student: updatedStudent,
+      message: "Profile updated successfully"
+    });
+  } catch (error) {
+    console.error("Update student profile error:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// CHANGE STUDENT PASSWORD
+exports.changeStudentPassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Current password is incorrect" });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+    await user.save();
+
+    res.json({ message: "Password changed successfully" });
+  } catch (error) {
+    console.error("Change student password error:", error);
     res.status(500).json({ message: error.message });
   }
 };

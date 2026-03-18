@@ -9,7 +9,10 @@ const {
   uploadMedia,
   adminGetAllOutpasses,
   adminFinalDecision,
+  changeAdminPassword      ,
+  updateAdminProfile,
 } = require("../controllers/outpassController");
+
 const protect        = require("../middleware/authMiddleware");
 const authorizeRoles = require("../middleware/roleMiddleware");
 
@@ -29,5 +32,7 @@ router.patch("/admin/decision/:id",protect, authorizeRoles("admin"), adminFinalD
 
 // Wildcard — MUST stay last
 router.get("/:id",            protect, authorizeRoles("student"), getOutpassById);
+
+
 
 module.exports = router;

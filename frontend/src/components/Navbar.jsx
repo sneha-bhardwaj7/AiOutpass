@@ -1,148 +1,167 @@
-import { useState, useEffect } from 'react'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { FiMenu, FiX, FiBell, FiLogOut, FiUser, FiShield, FiChevronDown } from 'react-icons/fi'
-import { useAuth } from '../context/AuthContext'
+// src/components/AdminLayout.jsx
+import { NavLink, useNavigate } from 'react-router-dom';
+import {
+  FiGrid, FiList, FiBarChart2, FiFileText, FiLogOut,
+  FiShield, FiSettings, FiUsers, FiChevronRight,
+} from 'react-icons/fi';
+import { HiOutlineSparkles } from 'react-icons/hi';
+import { useAuth } from '../context/AuthContext';
 
-const LOGO = () => (
-  <Link to="/" className="flex items-center gap-3 group">
-    <div className="relative">
-      <div className="w-9 h-9 grad-burgundy rounded-xl flex items-center justify-center shadow-[var(--shadow-burgundy)] group-hover:scale-105 transition-transform duration-300">
-        <span className="font-display font-bold text-[var(--cream)] text-lg leading-none">P</span>
-      </div>
-      <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-[var(--gold-light)] rounded-full border-2 border-white status-dot"/>
-    </div>
-    <div className="leading-none">
-      <span className="font-display font-bold text-[17px] text-[var(--cream)] tracking-tight">Pass</span>
-      <span className="font-display font-bold text-[17px] text-[var(--gold-light)] tracking-tight">With</span>
-      <span className="font-display font-bold text-[17px] text-[var(--cream)] tracking-tight">AI</span>
-    </div>
-  </Link>
-)
+const C = {
+  inkBlack:    '#080C14',
+  navyDeep:    '#0A1628',
+  tealMid:     '#0A7C7C',
+  tealBright:  '#0FB5B5',
+  amber:       '#E8A020',
+  amberLight:  '#F5BE58',
+  slateBorder: 'rgba(255,255,255,0.08)',
+  slateText:   'rgba(220,230,255,0.55)',
+  white:       '#F0F6FF',
+};
 
-export default function Navbar() {
-  const [scrolled, setScrolled] = useState(false)
-  const [open, setOpen]         = useState(false)
-  const [userMenu, setUserMenu] = useState(false)
-  const { user, role, logout }  = useAuth()
-  const navigate = useNavigate()
-  const { pathname } = useLocation()
+const navLinks = [
+  { to: '/admin/dashboard',  label: 'Dashboard',    icon: FiGrid,      badge: null },
+  { to: '/admin/requests',   label: 'All Requests', icon: FiList,      badge: '12' },
+  { to: '/admin/analytics',  label: 'Analytics',    icon: FiBarChart2, badge: null },
+  { to: '/admin/audit-logs', label: 'Audit Logs',   icon: FiFileText,  badge: null },
+  { to: '/admin/parents',    label: 'Parents',      icon: FiUsers,     badge: null },
+  { to: '/admin/profile',    label: 'My Profile',   icon: FiShield,    badge: null },
+];
 
-  useEffect(() => {
-    const fn = () => setScrolled(window.scrollY > 30)
-    window.addEventListener('scroll', fn)
-    return () => window.removeEventListener('scroll', fn)
-  }, [])
-  useEffect(() => setOpen(false), [pathname])
-
-  const navLinks = !user
-    ? [{ to:'/', label:'Home' }, { to:'/student/login', label:'Students' }, { to:'/admin/login', label:'Admins' }]
-    : role==='student'
-    ? [{ to:'/student/dashboard', label:'Dashboard' }, { to:'/student/request', label:'New Request' }, { to:'/student/status', label:'My Requests' }]
-    : [{ to:'/admin/dashboard', label:'Dashboard' }, { to:'/admin/requests', label:'Requests' }, { to:'/admin/analytics', label:'Analytics' }, { to:'/admin/audit-logs', label:'Audit Logs' }]
+const AdminSidebar = () => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
   return (
-    <>
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        scrolled ? 'glass-dark shadow-2xl shadow-[var(--burgundy-deep)]/30' : 'bg-transparent'
-      }`}>
-        <div className="max-w-7xl mx-auto px-5 sm:px-8">
-          <div className="flex items-center justify-between h-16">
-            <LOGO />
+    <aside style={{
+      width:256, background:'rgba(8,12,20,0.97)', backdropFilter:'blur(20px)',
+      display:'flex', flexDirection:'column', position:'fixed', height:'100%', zIndex:40,
+      borderRight:`1px solid rgba(232,160,32,0.12)`,
+      boxShadow:'4px 0 30px rgba(0,0,0,0.5)',
+      fontFamily:'DM Sans, sans-serif',
+    }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+        * { box-sizing: border-box; }
+        .admin-sb-link { transition: all 0.2s cubic-bezier(0.22,1,0.36,1); text-decoration: none; }
+        .admin-sb-link:hover:not(.admin-sb-active) { background: rgba(11,181,181,0.07) !important; color: #F0F6FF !important; }
+        .admin-logout:hover { background: rgba(248,113,113,0.1) !important; color: #f87171 !important; }
+        .admin-settings:hover { background: rgba(255,255,255,0.06) !important; color: #F0F6FF !important; }
+        @keyframes adminPulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+      `}</style>
 
-            {/* Desktop links */}
-            <div className="hidden md:flex items-center gap-1">
-              {navLinks.map(({ to, label }) => (
-                <Link key={to} to={to}
-                  className={`px-4 py-2 rounded-xl text-sm font-medium font-body transition-all duration-200 ${
-                    pathname === to
-                      ? 'bg-white/12 text-[var(--cream)] border border-white/12 shadow-inner'
-                      : 'text-[var(--cream)]/65 hover:text-[var(--cream)] hover:bg-white/8'
-                  }`}>
-                  {label}
-                </Link>
-              ))}
-            </div>
-
-            {/* Right */}
-            <div className="hidden md:flex items-center gap-2.5">
-              {user ? (
-                <>
-                  <button className="relative w-9 h-9 flex items-center justify-center rounded-xl bg-white/8 border border-white/12 text-[var(--cream)]/70 hover:text-[var(--cream)] hover:bg-white/15 transition-all duration-200">
-                    <FiBell size={15}/>
-                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[var(--gold-light)] rounded-full animate-pulse border border-[var(--burgundy-deep)]"/>
-                  </button>
-                  <div className="relative">
-                    <button onClick={() => setUserMenu(p => !p)}
-                      className="flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-white/8 border border-white/12 hover:bg-white/15 transition-all duration-200">
-                      <div className="w-7 h-7 rounded-lg grad-burgundy flex items-center justify-center flex-shrink-0">
-                        {role==='admin' ? <FiShield size={12} className="text-[var(--cream)]"/> : <FiUser size={12} className="text-[var(--cream)]"/>}
-                      </div>
-                      <span className="text-[var(--cream)] text-sm font-medium font-body max-w-[100px] truncate">{user?.name?.split(' ')[0] || 'User'}</span>
-                      <FiChevronDown size={12} className={`text-[var(--cream)]/50 transition-transform ${userMenu?'rotate-180':''}`}/>
-                    </button>
-                    {userMenu && (
-                      <div className="absolute top-full right-0 mt-2 w-44 glass-dark rounded-2xl overflow-hidden border border-white/12 shadow-2xl anim-scale-up">
-                        <Link to={role==='admin'?'/admin/profile':'/student/profile'}
-                          onClick={()=>setUserMenu(false)}
-                          className="flex items-center gap-2.5 px-4 py-3 text-[var(--cream)]/70 hover:text-[var(--cream)] hover:bg-white/10 transition-colors text-sm font-body">
-                          <FiUser size={13}/> My Profile
-                        </Link>
-                        <div className="h-px bg-white/8"/>
-                        <button onClick={()=>{ logout(); navigate('/'); setUserMenu(false) }}
-                          className="w-full flex items-center gap-2.5 px-4 py-3 text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors text-sm font-body">
-                          <FiLogOut size={13}/> Sign Out
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <Link to="/student/login"
-                    className="px-4 py-2 text-[var(--cream)]/70 hover:text-[var(--cream)] text-sm font-medium font-body transition-colors">
-                    Sign In
-                  </Link>
-                  <Link to="/student/signup"
-                    className="btn-magnetic px-5 py-2 grad-burgundy text-[var(--cream)] text-sm font-semibold rounded-xl shadow-[var(--shadow-burgundy)] font-body">
-                    Get Started
-                  </Link>
-                </div>
-              )}
-            </div>
-
-            {/* Mobile */}
-            <button onClick={() => setOpen(p=>!p)}
-              className="md:hidden w-9 h-9 flex items-center justify-center rounded-xl bg-white/8 border border-white/12 text-[var(--cream)]">
-              {open ? <FiX size={17}/> : <FiMenu size={17}/>}
-            </button>
+      {/* Logo */}
+      <div style={{ padding:'22px 20px 18px', borderBottom:`1px solid rgba(232,160,32,0.1)` }}>
+        <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+          <div style={{ width:40, height:40, background:`linear-gradient(135deg, ${C.tealMid}, ${C.tealBright})`, borderRadius:11, display:'flex', alignItems:'center', justifyContent:'center', boxShadow:`0 0 20px rgba(11,181,181,0.35)`, flexShrink:0 }}>
+            <FiShield size={19} color="#fff"/>
+          </div>
+          <div>
+            <p style={{ color:C.white, fontWeight:700, fontSize:17, fontFamily:'Space Grotesk, sans-serif', letterSpacing:-0.3, lineHeight:1 }}>
+              Pass<span style={{ color:C.tealBright }}>Gate</span> AI
+            </p>
+            <p style={{ color:'rgba(220,230,255,0.25)', fontSize:9, fontFamily:'DM Mono, monospace', letterSpacing:'0.2em', textTransform:'uppercase', marginTop:3 }}>Admin Console</p>
           </div>
         </div>
+      </div>
 
-        {/* Mobile menu */}
-        <div className={`md:hidden transition-all duration-300 overflow-hidden ${open?'max-h-96':'max-h-0'}`}>
-          <div className="glass-dark border-t border-white/8 px-5 py-4 space-y-1">
-            {navLinks.map(({to,label}) => (
-              <Link key={to} to={to} className="block px-4 py-3 rounded-xl text-[var(--cream)]/70 hover:text-[var(--cream)] hover:bg-white/8 text-sm font-body transition-colors">
-                {label}
-              </Link>
-            ))}
-            {!user && (
-              <div className="pt-2 flex gap-2">
-                <Link to="/student/signup" className="flex-1 btn-magnetic py-3 grad-burgundy text-[var(--cream)] text-sm font-semibold rounded-xl text-center font-body">Sign Up</Link>
-                <Link to="/admin/login"    className="flex-1 py-3 border border-white/20 text-[var(--cream)]/70 text-sm font-semibold rounded-xl text-center font-body hover:bg-white/8 transition-colors">Admin</Link>
-              </div>
-            )}
-            {user && (
-              <button onClick={()=>{logout();navigate('/')}} className="w-full flex items-center gap-2 px-4 py-3 text-red-400 text-sm font-body">
-                <FiLogOut size={13}/> Sign Out
-              </button>
-            )}
+      {/* Admin badge */}
+      <div style={{ margin:'14px 14px 0', padding:'12px 14px', background:`rgba(232,160,32,0.07)`, border:`1px solid rgba(232,160,32,0.18)`, borderRadius:14 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+          <div style={{ width:36, height:36, background:`linear-gradient(135deg, rgba(13,79,79,0.8), rgba(10,118,118,0.6))`, border:`1px solid rgba(232,160,32,0.3)`, borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+            <span style={{ color:C.amberLight, fontWeight:800, fontSize:14, fontFamily:'Space Grotesk, sans-serif' }}>{user?.name?.[0]?.toUpperCase() || 'A'}</span>
           </div>
+          <div style={{ flex:1, minWidth:0 }}>
+            <p style={{ color:C.white, fontSize:13, fontWeight:600, fontFamily:'DM Sans, sans-serif', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{user?.name || 'Admin'}</p>
+            <p style={{ color:C.amberLight, fontSize:9, fontWeight:700, fontFamily:'DM Mono, monospace', letterSpacing:'0.15em', textTransform:'uppercase', marginTop:2 }}>Administrator</p>
+          </div>
+          <div style={{ width:7, height:7, borderRadius:'50%', background:'#34D399', flexShrink:0, animation:'adminPulse 2.2s ease-in-out infinite', boxShadow:'0 0 8px rgba(52,211,153,0.5)' }}/>
         </div>
+      </div>
+
+      {/* Nav */}
+      <nav style={{ flex:1, padding:'18px 10px 10px', overflowY:'auto', scrollbarWidth:'none' }}>
+        <p style={{ fontSize:'8.5px', fontWeight:700, letterSpacing:'0.22em', textTransform:'uppercase', color:'rgba(255,255,255,0.12)', padding:'0 12px', marginBottom:6, fontFamily:'DM Mono, monospace' }}>Navigation</p>
+        {navLinks.map(({ to, label, icon: Icon, badge }) => (
+          <NavLink key={to} to={to}
+            className={({ isActive }) => `admin-sb-link${isActive ? ' admin-sb-active' : ''}`}
+            style={({ isActive }) => ({
+              display:'flex', alignItems:'center', gap:11, padding:'11px 12px', borderRadius:12,
+              marginBottom:3, fontSize:13, fontWeight: isActive ? 600 : 400,
+              background: isActive ? `linear-gradient(135deg, ${C.tealMid}, ${C.tealBright})` : 'transparent',
+              color: isActive ? '#fff' : 'rgba(220,230,255,0.4)',
+              boxShadow: isActive ? `0 4px 16px rgba(11,181,181,0.28)` : 'none',
+            })}>
+            {({ isActive }) => (
+              <>
+                <span style={{ width:28, height:28, borderRadius:8, background: isActive ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.05)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, transition:'background 0.2s' }}>
+                  <Icon size={14}/>
+                </span>
+                <span style={{ flex:1, fontFamily:'DM Sans, sans-serif' }}>{label}</span>
+                {badge && (
+                  <span style={{ padding:'2px 8px', borderRadius:20, fontSize:'9.5px', fontWeight:700, fontFamily:'DM Mono, monospace', background: isActive ? 'rgba(255,255,255,0.18)' : 'rgba(232,160,32,0.15)', color: isActive ? 'rgba(255,255,255,0.85)' : C.amberLight }}>{badge}</span>
+                )}
+                {isActive && <FiChevronRight size={12} style={{ opacity:0.45 }}/>}
+              </>
+            )}
+          </NavLink>
+        ))}
       </nav>
 
-      {/* Overlay for user menu */}
-      {userMenu && <div className="fixed inset-0 z-40" onClick={()=>setUserMenu(false)}/>}
-    </>
-  )
-}
+      {/* Divider */}
+      <div style={{ height:1, margin:'0 14px', background:'rgba(255,255,255,0.05)' }}/>
+
+      {/* AI Status */}
+      <div style={{ margin:'10px 14px', padding:'10px 13px', background:'rgba(11,181,181,0.06)', border:'1px solid rgba(11,181,181,0.15)', borderRadius:12, display:'flex', alignItems:'center', gap:9 }}>
+        <HiOutlineSparkles size={14} style={{ color:C.tealBright, flexShrink:0 }}/>
+        <div style={{ flex:1 }}>
+          <p style={{ fontSize:11, fontWeight:600, color:C.white, fontFamily:'DM Sans, sans-serif', lineHeight:1 }}>AI Engine</p>
+          <p style={{ fontSize:9, color:'#34D399', fontFamily:'DM Mono, monospace', marginTop:2 }}>Active & Running</p>
+        </div>
+        <div style={{ width:6, height:6, borderRadius:'50%', background:'#34D399', animation:'adminPulse 2.2s ease-in-out infinite', boxShadow:'0 0 6px rgba(52,211,153,0.6)' }}/>
+      </div>
+
+      {/* Bottom */}
+      <div style={{ padding:'0 10px 14px' }}>
+        <button className="admin-settings" style={{ width:'100%', display:'flex', alignItems:'center', gap:11, padding:'11px 12px', borderRadius:12, background:'none', border:'none', cursor:'pointer', color:'rgba(220,230,255,0.28)', fontSize:13, fontFamily:'DM Sans, sans-serif', transition:'all 0.2s', textAlign:'left', marginBottom:2 }}>
+          <span style={{ width:28, height:28, borderRadius:8, background:'rgba(255,255,255,0.05)', display:'flex', alignItems:'center', justifyContent:'center' }}><FiSettings size={14}/></span>
+          Settings
+        </button>
+        <button className="admin-logout" onClick={() => { logout?.(); navigate('/admin/login'); }}
+          style={{ width:'100%', display:'flex', alignItems:'center', gap:11, padding:'11px 12px', borderRadius:12, background:'none', border:'none', cursor:'pointer', color:'rgba(220,230,255,0.28)', fontSize:13, fontFamily:'DM Sans, sans-serif', transition:'all 0.2s', textAlign:'left' }}>
+          <span style={{ width:28, height:28, borderRadius:8, background:'rgba(255,255,255,0.05)', display:'flex', alignItems:'center', justifyContent:'center' }}><FiLogOut size={14}/></span>
+          Logout
+        </button>
+      </div>
+    </aside>
+  );
+};
+
+const AdminLayout = ({ children, title, subtitle }) => (
+  <div style={{ minHeight:'100vh', display:'flex', background:`linear-gradient(170deg, #080C14 0%, #0A1628 100%)`, fontFamily:'DM Sans, sans-serif' }}>
+    <AdminSidebar />
+    <main style={{ flex:1, marginLeft:256, minHeight:'100vh', display:'flex', flexDirection:'column' }}>
+      {(title || subtitle) && (
+        <div style={{
+          position:'sticky', top:0, zIndex:20,
+          background:'rgba(8,12,20,0.92)', backdropFilter:'blur(16px)',
+          borderBottom:`1px solid rgba(255,255,255,0.07)`,
+          padding:'16px 32px', display:'flex', alignItems:'center', justifyContent:'space-between',
+        }}>
+          <div>
+            {title    && <h1 style={{ fontFamily:'Space Grotesk, sans-serif', fontWeight:800, fontSize:22, color:'#F0F6FF', letterSpacing:-0.6, lineHeight:1 }}>{title}</h1>}
+            {subtitle && <p style={{ fontSize:11, color:'rgba(220,230,255,0.4)', marginTop:4, fontFamily:'DM Mono, monospace' }}>{subtitle}</p>}
+          </div>
+          <div style={{ display:'flex', alignItems:'center', gap:7, padding:'6px 14px', background:'rgba(52,211,153,0.08)', border:'1px solid rgba(52,211,153,0.2)', borderRadius:20 }}>
+            <div style={{ width:6, height:6, borderRadius:'50%', background:'#34D399', animation:'adminPulse 2.2s ease-in-out infinite', boxShadow:'0 0 8px rgba(52,211,153,0.5)' }}/>
+            <span style={{ fontSize:10, fontWeight:700, color:'rgba(52,211,153,0.9)', fontFamily:'DM Mono, monospace', letterSpacing:'0.08em' }}>LIVE</span>
+          </div>
+        </div>
+      )}
+      <div style={{ padding:'28px 32px', flex:1 }}>{children}</div>
+    </main>
+    <style>{`@keyframes adminPulse{0%,100%{opacity:1}50%{opacity:0.35}}`}</style>
+  </div>
+);
+
+export default AdminLayout;
