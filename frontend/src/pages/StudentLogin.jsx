@@ -1,225 +1,107 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import {
-  FiMail, FiLock, FiEye, FiEyeOff, FiArrowRight, FiLoader
-} from 'react-icons/fi';
-import { MdOutlineSchool } from 'react-icons/md';
-import { useAuth } from '../context/AuthContext';
+// src/pages/StudentLogin.jsx
+import{useState}from'react';
+import{Link,useNavigate}from'react-router-dom';
+import{FiMail,FiLock,FiEye,FiEyeOff,FiArrowRight,FiLoader}from'react-icons/fi';
+import{MdOutlineSchool}from'react-icons/md';
+import{useAuth}from'../context/AuthContext';
+import PageBackground,{T,GCSS}from'../components/Pagebackground';
 
-/* ─── Color Tokens — Midnight Teal × Amber × Slate ─── */
-const C = {
-  inkBlack:    '#080C14',
-  navyDeep:    '#0A1628',
-  navyMid:     '#0F2347',
-  navyLight:   '#1A3A6B',
-  tealDeep:    '#0D4F4F',
-  tealMid:     '#0A7C7C',
-  tealBright:  '#0FB5B5',
-  tealGlow:    '#1DE8E8',
-  amber:       '#E8A020',
-  amberLight:  '#F5BE58',
-  slateGlass:  'rgba(255,255,255,0.04)',
-  slateBorder: 'rgba(255,255,255,0.08)',
-  slateText:   'rgba(220,230,255,0.55)',
-  slateLight:  'rgba(220,230,255,0.75)',
-  white:       '#F0F6FF',
-  offWhite:    '#D4E4FF',
-};
+function Field({label,icon:Icon,type='text',value,onChange,placeholder,error,rightEl}){
+  const[f,sF]=useState(false);
+  return(
+    <div style={{display:'flex',flexDirection:'column',gap:6}}>
+      <label style={{fontSize:9.5,fontWeight:700,letterSpacing:'0.24em',textTransform:'uppercase',color:f?T.mid:T.inkDim,transition:'color 0.2s'}}>{label}</label>
+      <div style={{position:'relative'}}>
+        <div style={{position:'absolute',left:13,top:'50%',transform:'translateY(-50%)',color:f?T.mid:T.inkDim,transition:'color 0.22s',pointerEvents:'none'}}><Icon size={14}/></div>
+        <input type={type} value={value} onChange={onChange} placeholder={placeholder}
+          onFocus={()=>sF(true)} onBlur={()=>sF(false)}
+          style={{width:'100%',padding:rightEl?'12px 42px 12px 40px':'12px 14px 12px 40px',borderRadius:12,border:`1.5px solid ${error?T.errBd:f?T.focusBd:T.inputBd}`,background:f?T.focusBg:T.inputBg,color:T.ink,fontSize:14,transition:'all 0.22s',boxShadow:f?T.focusSh:'none'}}/>
+        {rightEl&&<div style={{position:'absolute',right:12,top:'50%',transform:'translateY(-50%)',display:'flex',alignItems:'center'}}>{rightEl}</div>}
+      </div>
+      {error&&<p style={{fontSize:11,color:T.err,marginTop:2}}>{error}</p>}
+    </div>
+  );
+}
 
-const StudentLogin = () => {
-  const [form, setForm] = useState({ email: '', password: '' });
-  const [showPass, setShowPass] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [focusedField, setFocusedField] = useState('');
+export default function StudentLogin(){
+  const[form,setForm]=useState({email:'',password:''});
+  const[show,setShow]=useState(false);
+  const[loading,setLoading]=useState(false);
+  const[error,setError]=useState('');
+  const{login}=useAuth();
+  const navigate=useNavigate();
 
-  const { login } = useAuth();
-  const navigate = useNavigate();
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-    try {
-      const res = await fetch('http://localhost:5000/api/auth/student/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: form.email.trim().toLowerCase(), password: form.password }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Invalid credentials');
-      localStorage.setItem('token', data.token);
-      login({ _id: data.id, name: data.name, email: data.email, role: data.role }, data.role, data.token);
+  const submit=async e=>{
+    e.preventDefault();setLoading(true);setError('');
+    try{
+      const res=await fetch('http://localhost:5000/api/auth/student/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:form.email.trim().toLowerCase(),password:form.password})});
+      const data=await res.json();
+      if(!res.ok)throw new Error(data.message||'Invalid credentials');
+      localStorage.setItem('token',data.token);
+      login({_id:data.id,name:data.name,email:data.email,role:data.role},data.role,data.token);
       navigate('/student/dashboard');
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+    }catch(err){setError(err.message);}finally{setLoading(false);}
   };
 
-  const inputStyle = (field) => ({
-    width: '100%',
-    padding: field === 'password' ? '13px 48px 13px 46px' : '13px 16px 13px 46px',
-    borderRadius: 12,
-    border: `1.5px solid ${focusedField === field ? C.tealBright : 'rgba(255,255,255,0.1)'}`,
-    background: focusedField === field ? 'rgba(11,181,181,0.06)' : 'rgba(255,255,255,0.04)',
-    color: C.white,
-    fontSize: 14,
-    fontFamily: 'DM Sans, sans-serif',
-    outline: 'none',
-    transition: 'all 0.25s ease',
-    boxShadow: focusedField === field ? `0 0 0 3px rgba(11,181,181,0.12)` : 'none',
-  });
+  return(
+    <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',padding:'40px 24px',position:'relative',overflow:'hidden'}}>
+      <style>{GCSS}</style>
+      <PageBackground/>
 
-  return (
-    <div style={{
-      minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: `linear-gradient(170deg, ${C.inkBlack} 0%, ${C.navyDeep} 50%, #050E1F 100%)`,
-      fontFamily: 'DM Sans, sans-serif', padding: '24px', position: 'relative', overflow: 'hidden',
-    }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=DM+Mono:wght@400;500&display=swap');
-        * { box-sizing: border-box; }
-        input::placeholder { color: rgba(220,230,255,0.28) !important; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes floatOrb1 { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(-20px,18px) scale(1.1)} }
-        @keyframes floatOrb2 { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(16px,-14px) scale(1.08)} }
-      `}</style>
+      <div style={{width:'100%',maxWidth:448,position:'relative',zIndex:1,animation:'fadeUp 0.55s cubic-bezier(0.22,1,0.36,1) both'}}>
 
-      {/* Background orbs */}
-      <div style={{ position: 'absolute', top: '-10%', right: '-5%', width: 500, height: 500, borderRadius: '50%', background: `radial-gradient(circle, rgba(11,181,181,0.08) 0%, transparent 60%)`, animation: 'floatOrb1 9s ease-in-out infinite', pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', bottom: '-10%', left: '-5%', width: 420, height: 420, borderRadius: '50%', background: `radial-gradient(circle, rgba(232,160,32,0.06) 0%, transparent 65%)`, animation: 'floatOrb2 11s ease-in-out infinite', pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', inset: 0, backgroundImage: `linear-gradient(rgba(11,181,181,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(11,181,181,0.03) 1px,transparent 1px)`, backgroundSize: '64px 64px', pointerEvents: 'none', opacity: 0.5 }} />
-
-      <div style={{ width: '100%', maxWidth: 440, position: 'relative', zIndex: 1 }}>
         {/* Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 40 }}>
-          <div style={{
-            width: 42, height: 42, borderRadius: 11,
-            background: `linear-gradient(135deg, ${C.tealMid}, ${C.tealBright})`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: `0 0 24px rgba(11,181,181,0.4)`,
-          }}>
-            <MdOutlineSchool size={21} color="#fff" />
+        {/* <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:10,marginBottom:22}}>
+          <div style={{width:40,height:40,borderRadius:12,background:`linear-gradient(135deg,${T.deep},${T.bright})`,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:`0 5px 18px rgba(91,74,155,0.40)`}}>
+            <MdOutlineSchool size={20} color="#fff"/>
           </div>
-          <span style={{ fontFamily: 'Space Grotesk, sans-serif', fontWeight: 700, fontSize: 24, color: C.white, letterSpacing: -0.5 }}>
-            Pass<span style={{ color: C.tealBright }}>Gate</span>
-            <span style={{ color: C.slateText, fontWeight: 300 }}> AI</span>
+          <span style={{fontWeight:800,fontSize:21,color:T.ink,letterSpacing:-0.5}}>
+            Pass<span style={{color:T.mid}}>Gate</span><span style={{fontWeight:300,color:T.inkSoft,fontSize:15}}> AI</span>
           </span>
-        </div>
+        </div> */}
 
-        {/* Card */}
-        <div style={{
-          background: 'rgba(15,22,48,0.7)',
-          backdropFilter: 'blur(24px)',
-          borderRadius: 24,
-          border: `1px solid rgba(11,181,181,0.15)`,
-          boxShadow: `0 24px 80px rgba(0,0,0,0.4), inset 0 1px 0 rgba(11,181,181,0.1)`,
-          padding: '40px 36px',
-        }}>
-          {/* Top teal line */}
-          <div style={{ position: 'absolute', top: 0, left: '10%', right: '10%', height: 2, background: `linear-gradient(90deg, transparent, ${C.tealBright}80, transparent)`, borderRadius: 2 }} />
+        {/* Glass card */}
+        <div style={{background:T.glass,backdropFilter:'blur(36px)',border:`1px solid ${T.glassBd}`,borderRadius:26,boxShadow:T.glassSh,padding:'42px 38px',position:'relative',overflow:'hidden'}}>
+          <div style={{position:'absolute',top:0,left:0,right:0,height:4,background:`linear-gradient(90deg,${T.deep},${T.mid},${T.bright})`}}/>
+          <div style={{position:'absolute',top:0,right:0,width:200,height:200,borderRadius:'0 26px 0 100%',background:'rgba(139,123,200,0.08)',pointerEvents:'none'}}/>
 
-          <div style={{ marginBottom: 32 }}>
-            <h2 style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 30, fontWeight: 800, color: C.white, marginBottom: 8, letterSpacing: -1 }}>
-              Welcome Back
-            </h2>
-            <p style={{ fontSize: 14, color: C.slateText, fontFamily: 'DM Sans, sans-serif', lineHeight: 1.6 }}>
-              Sign in to your student portal
-            </p>
+          {/* Icon header */}
+          <div style={{textAlign:'center',marginBottom:30,paddingTop:6}}>
+            <div style={{width:68,height:68,borderRadius:20,margin:'0 auto 18px',background:`linear-gradient(135deg,${T.deep},${T.mid})`,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:`0 12px 32px rgba(91,74,155,0.38)`,animation:'bob 3.5s ease-in-out infinite'}}>
+              <MdOutlineSchool size={30} color="rgba(255,255,255,0.94)"/>
+            </div>
+            <h2 style={{fontWeight:800,fontSize:28,color:T.ink,letterSpacing:-0.8,lineHeight:1.1,marginBottom:7}}>Student Portal</h2>
+            <p style={{fontSize:13,color:T.inkSoft,fontWeight:300}}>Sign in to access your outpass dashboard</p>
           </div>
 
-          {error && (
-            <div style={{
-              marginBottom: 24, padding: '12px 16px', borderRadius: 12,
-              background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)',
-              display: 'flex', alignItems: 'center', gap: 10,
-            }}>
-              <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#ef4444', flexShrink: 0 }} />
-              <span style={{ fontSize: 13, color: '#f87171', fontFamily: 'DM Sans, sans-serif' }}>{error}</span>
+          {/* Notice */}
+          <div style={{marginBottom:24,padding:'13px 16px',borderRadius:13,background:T.snow,border:`1px solid ${T.border}`,display:'flex',alignItems:'flex-start',gap:10}}>
+            <MdOutlineSchool size={13} style={{color:T.mid,flexShrink:0,marginTop:2}}/>
+            <p style={{fontSize:12,color:T.inkSoft,lineHeight:1.70,margin:0}}>Enter your college credentials to access your outpass dashboard and manage leave requests.</p>
+          </div>
+
+          {error&&(
+            <div style={{marginBottom:20,padding:'13px 16px',borderRadius:13,background:T.errBg,border:`1px solid ${T.errBd}`,display:'flex',alignItems:'center',gap:9,animation:'fadeIn 0.3s both'}}>
+              <div style={{width:5,height:5,borderRadius:'50%',background:T.err,flexShrink:0}}/>
+              <span style={{fontSize:13,color:T.err}}>{error}</span>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            {/* Email */}
-            <div>
-              <label style={{ display: 'block', fontSize: 10, fontWeight: 600, letterSpacing: 3, textTransform: 'uppercase', color: focusedField === 'email' ? C.tealBright : C.slateText, marginBottom: 8, fontFamily: 'DM Mono, monospace', transition: 'color 0.2s' }}>
-                Email Address
-              </label>
-              <div style={{ position: 'relative' }}>
-                <FiMail size={15} style={{ position: 'absolute', left: 15, top: '50%', transform: 'translateY(-50%)', color: focusedField === 'email' ? C.tealBright : 'rgba(220,230,255,0.3)', transition: 'color 0.25s', pointerEvents: 'none' }} />
-                <input
-                  type="email" required value={form.email}
-                  onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
-                  placeholder="student@college.edu"
-                  onFocus={() => setFocusedField('email')}
-                  onBlur={() => setFocusedField('')}
-                  style={inputStyle('email')}
-                />
-              </div>
-            </div>
-
-            {/* Password */}
-            <div>
-              <label style={{ display: 'block', fontSize: 10, fontWeight: 600, letterSpacing: 3, textTransform: 'uppercase', color: focusedField === 'password' ? C.tealBright : C.slateText, marginBottom: 8, fontFamily: 'DM Mono, monospace', transition: 'color 0.2s' }}>
-                Password
-              </label>
-              <div style={{ position: 'relative' }}>
-                <FiLock size={15} style={{ position: 'absolute', left: 15, top: '50%', transform: 'translateY(-50%)', color: focusedField === 'password' ? C.tealBright : 'rgba(220,230,255,0.3)', transition: 'color 0.25s', pointerEvents: 'none' }} />
-                <input
-                  type={showPass ? 'text' : 'password'} required value={form.password}
-                  onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
-                  placeholder="Enter your password"
-                  onFocus={() => setFocusedField('password')}
-                  onBlur={() => setFocusedField('')}
-                  style={inputStyle('password')}
-                />
-                <button type="button" onClick={() => setShowPass(p => !p)} style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(220,230,255,0.35)', padding: 0, display: 'flex' }}>
-                  {showPass ? <FiEyeOff size={15} /> : <FiEye size={15} />}
-                </button>
-              </div>
-            </div>
-
-            {/* Submit */}
-            <button type="submit" disabled={loading} style={{
-              width: '100%', marginTop: 4, padding: '14px 20px', borderRadius: 12, border: 'none',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              background: `linear-gradient(135deg, ${C.tealMid}, ${C.tealBright})`,
-              color: '#fff', fontSize: 15, fontWeight: 700, fontFamily: 'DM Sans, sans-serif',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-              boxShadow: `0 8px 28px rgba(11,181,181,0.32)`, transition: 'all 0.28s',
-              opacity: loading ? 0.7 : 1,
-            }}
-              onMouseEnter={e => { if (!loading) { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = `0 14px 36px rgba(11,181,181,0.48)`; }}}
-              onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = `0 8px 28px rgba(11,181,181,0.32)`; }}>
-              {loading
-                ? <><FiLoader size={15} style={{ animation: 'spin 1s linear infinite' }} /> Signing in…</>
-                : <>Sign In <FiArrowRight size={15} /></>}
+          <form onSubmit={submit} style={{display:'flex',flexDirection:'column',gap:17}}>
+            <Field label="Email Address" icon={FiMail} type="email" value={form.email} onChange={e=>setForm(p=>({...p,email:e.target.value}))} placeholder="student@college.edu"/>
+            <Field label="Password" icon={FiLock} type={show?'text':'password'} value={form.password} onChange={e=>setForm(p=>({...p,password:e.target.value}))} placeholder="Enter your password"
+              rightEl={<button type="button" onClick={()=>setShow(p=>!p)} style={{background:'none',border:'none',cursor:'pointer',color:T.inkDim,padding:0,display:'flex',transition:'color 0.18s'}}>{show?<FiEyeOff size={14}/>:<FiEye size={14}/>}</button>}/>
+            <button type="submit" disabled={loading} className="btn-p" style={{marginTop:8,padding:'14px 20px',borderRadius:14,border:'none',background:`linear-gradient(135deg,${T.deep} 0%,${T.mid} 55%,${T.bright} 100%)`,color:'#fff',fontSize:15,fontWeight:700,cursor:loading?'not-allowed':'pointer',opacity:loading?0.76:1,display:'flex',alignItems:'center',justifyContent:'center',gap:9,boxShadow:`0 8px 26px rgba(91,74,155,0.40)`}}>
+              {loading?<><FiLoader size={14} style={{animation:'spin 1s linear infinite'}}/> Signing in…</>:<>Sign In <FiArrowRight size={14}/></>}
             </button>
           </form>
 
-          <div style={{ marginTop: 28, paddingTop: 22, borderTop: `1px solid rgba(255,255,255,0.07)`, textAlign: 'center' }}>
-            <p style={{ fontSize: 13, color: C.slateText, fontFamily: 'DM Sans, sans-serif' }}>
-              Don't have an account?{' '}
-              <Link to="/student/signup" style={{ color: C.tealBright, fontWeight: 700, textDecoration: 'none' }}>
-                Create Account
-              </Link>
-            </p>
+          <div style={{marginTop:26,paddingTop:20,borderTop:`1px solid ${T.border}`,display:'flex',flexDirection:'column',alignItems:'center',gap:10}}>
+            <p style={{fontSize:13,color:T.inkSoft}}>Don't have an account? <Link to="/student/signup" className="lnk" style={{color:T.mid,fontWeight:600,textDecoration:'none'}}>Create account</Link></p>
+            <Link to="/admin/login" className="lnk" style={{fontSize:10,color:T.inkDim,textDecoration:'none',letterSpacing:'0.14em',textTransform:'uppercase'}}>Admin portal →</Link>
           </div>
         </div>
-
-        {/* Admin link */}
-        <p style={{ textAlign: 'center', marginTop: 20, fontSize: 12, color: C.slateText, fontFamily: 'DM Sans, sans-serif' }}>
-          <Link to="/admin/login" style={{ color: C.slateText, textDecoration: 'none', transition: 'color 0.2s' }}
-            onMouseEnter={e => e.target.style.color = C.white}
-            onMouseLeave={e => e.target.style.color = C.slateText}>
-            Admin portal →
-          </Link>
-        </p>
       </div>
     </div>
   );
-};
-
-export default StudentLogin;
+}

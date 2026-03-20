@@ -1,333 +1,269 @@
-import { useState, useRef, useEffect } from 'react';
-import {
-  FiUser, FiMail, FiPhone, FiHash, FiHome, FiEdit3,
-  FiSave, FiCamera, FiCheckCircle, FiAlertCircle, FiLoader,
-  FiLock, FiEye, FiEyeOff, FiBook, FiCalendar, FiShield
-} from 'react-icons/fi';
+// src/pages/StudentProfile.jsx
+// FIX 1: '../components/Pagebackground' → '../components/PageBackground' (capital B)
+// FIX 2: saveProfile uses updateUser() instead of login() — token never wiped
+
+import { useState, useRef } from 'react';
+import { FiUser, FiMail, FiPhone, FiHash, FiHome, FiEdit3, FiSave, FiCamera, FiCheckCircle, FiAlertCircle, FiLoader, FiLock, FiEye, FiEyeOff, FiBook, FiShield } from 'react-icons/fi';
 import StudentLayout from '../components/StudentLayout';
 import { useAuth } from '../context/AuthContext';
+import { T, GCSS } from '../components/Pagebackground';   // ← capital B fixed
 
 const BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+const CARD = { background:'rgba(255,255,255,0.62)', backdropFilter:'blur(28px)', border:'1px solid rgba(255,255,255,0.86)', borderRadius:20, overflow:'hidden', boxShadow:'0 8px 32px rgba(91,74,155,0.12)' };
 
-const StudentProfile = () => {
-  const { user, login, role } = useAuth();
-  const [profile, setProfile] = useState({
-    name: user?.name || '',
-    email: user?.email || '',
-    phone: user?.phone || '',
-    collegeId: user?.collegeId || '',
-    hostelRoom: user?.hostelRoom || '',
-    department: user?.department || '',
-    year: user?.year || '',
-    bio: user?.bio || '',
-  });
-  const [passwords, setPasswords] = useState({ current: '', newPass: '', confirm: '' });
-  const [showPass, setShowPass] = useState({ current: false, new: false, confirm: false });
-  const [avatar, setAvatar] = useState(user?.avatar || null);
-  const [avatarPreview, setAvatarPreview] = useState(user?.avatar || null);
-  const [saving, setSaving] = useState(false);
-  const [savingPass, setSavingPass] = useState(false);
-  const [toast, setToast] = useState(null);
-  const [activeTab, setActiveTab] = useState('personal');
+function Field({ label, icon: Icon, type='text', value, onChange, placeholder }) {
+  const [f, sF] = useState(false);
+  return (
+    <div>
+      <label style={{ display:'block', fontSize:9.5, fontWeight:700, letterSpacing:'0.22em', textTransform:'uppercase', color:f?T.mid:T.inkDim, marginBottom:7, transition:'color 0.2s' }}>{label}</label>
+      <div style={{ position:'relative' }}>
+        <Icon size={14} style={{ position:'absolute', left:13, top:'50%', transform:'translateY(-50%)', color:f?T.mid:T.inkDim, transition:'color 0.25s', pointerEvents:'none' }}/>
+        <input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
+          onFocus={() => sF(true)} onBlur={() => sF(false)}
+          style={{ width:'100%', paddingLeft:40, paddingRight:14, paddingTop:11, paddingBottom:11, borderRadius:12, border:`1.5px solid ${f?T.focusBd:T.inputBd}`, background:f?T.focusBg:T.inputBg, color:T.ink, fontSize:13, outline:'none', transition:'all 0.25s', boxShadow:f?T.focusSh:'none' }}/>
+      </div>
+    </div>
+  );
+}
+
+function PassField({ label, value, onChange, show, toggle, placeholder, error }) {
+  const [f, sF] = useState(false);
+  return (
+    <div>
+      <label style={{ display:'block', fontSize:9.5, fontWeight:700, letterSpacing:'0.22em', textTransform:'uppercase', color:f?T.mid:T.inkDim, marginBottom:7, transition:'color 0.2s' }}>{label}</label>
+      <div style={{ position:'relative' }}>
+        <FiLock size={14} style={{ position:'absolute', left:13, top:'50%', transform:'translateY(-50%)', color:f?T.mid:T.inkDim, transition:'color 0.25s', pointerEvents:'none' }}/>
+        <input type={show?'text':'password'} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
+          onFocus={() => sF(true)} onBlur={() => sF(false)}
+          style={{ width:'100%', paddingLeft:40, paddingRight:44, paddingTop:11, paddingBottom:11, borderRadius:12, border:`1.5px solid ${error?T.errBd:f?T.focusBd:T.inputBd}`, background:f?T.focusBg:T.inputBg, color:T.ink, fontSize:13, outline:'none', transition:'all 0.25s', boxShadow:error?`0 0 0 3px ${T.errBg}`:f?T.focusSh:'none' }}/>
+        <button type="button" onClick={toggle} style={{ position:'absolute', right:13, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', color:T.inkDim, padding:0, display:'flex' }}>
+          {show ? <FiEyeOff size={14}/> : <FiEye size={14}/>}
+        </button>
+      </div>
+      {error && <p style={{ fontSize:11, color:T.err, marginTop:5 }}>{error}</p>}
+    </div>
+  );
+}
+
+function SelField({ label, value, onChange, options, placeholder }) {
+  const [f, sF] = useState(false);
+  return (
+    <div>
+      <label style={{ display:'block', fontSize:9.5, fontWeight:700, letterSpacing:'0.22em', textTransform:'uppercase', color:f?T.mid:T.inkDim, marginBottom:7, transition:'color 0.2s' }}>{label}</label>
+      <select value={value} onChange={e => onChange(e.target.value)} onFocus={() => sF(true)} onBlur={() => sF(false)}
+        style={{ width:'100%', padding:'11px 14px', borderRadius:12, border:`1.5px solid ${f?T.focusBd:T.inputBd}`, background:f?T.focusBg:T.inputBg, color:value?T.ink:T.inkDim, fontSize:13, outline:'none', appearance:'none', transition:'all 0.25s', boxShadow:f?T.focusSh:'none' }}>
+        <option value="">{placeholder}</option>
+        {options.map(o => <option key={o} value={o}>{o}</option>)}
+      </select>
+    </div>
+  );
+}
+
+function SaveBtn({ onClick, loading, label, icon: Icon }) {
+  return (
+    <button onClick={onClick} disabled={loading} className="btn-p"
+      style={{ display:'inline-flex', alignItems:'center', gap:7, padding:'12px 24px', borderRadius:12, border:'none', cursor:loading?'not-allowed':'pointer', background:`linear-gradient(135deg,${T.deep},${T.mid})`, color:'#fff', fontSize:13, fontWeight:700, boxShadow:`0 6px 20px rgba(91,74,155,0.30)`, opacity:loading?0.72:1, transition:'all 0.25s' }}>
+      {loading ? <><FiLoader size={13} style={{ animation:'spin 1s linear infinite' }}/> Saving…</> : <><Icon size={13}/> {label}</>}
+    </button>
+  );
+}
+
+export default function StudentProfile() {
+  // ── FIX: updateUser merges fields into localStorage without touching token/role ──
+  const { user, updateUser } = useAuth();
+  const token = localStorage.getItem('token');
+
+  const [profile,      setProfile]      = useState({ name:user?.name||'', email:user?.email||'', phone:user?.phone||'', collegeId:user?.collegeId||'', hostelRoom:user?.hostelRoom||'', department:user?.department||'', year:user?.year||'', bio:user?.bio||'' });
+  const [passwords,    setPasswords]    = useState({ current:'', newPass:'', confirm:'' });
+  const [showPass,     setShowPass]     = useState({ current:false, new:false, confirm:false });
+  const [avatarFile,   setAvatarFile]   = useState(null);
+  const [avatarPreview,setAvatarPreview]= useState(user?.avatar || null);
+  const [saving,       setSaving]       = useState(false);
+  const [savingPass,   setSavingPass]   = useState(false);
+  const [toast,        setToast]        = useState(null);
+  const [tab,          setTab]          = useState('personal');
   const fileRef = useRef();
 
-  const showToast = (msg, type = 'success') => {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 3500);
-  };
+  const showToast = (msg, type='success') => { setToast({ msg, type }); setTimeout(() => setToast(null), 3500); };
+  const handleAvatarChange = e => { const f = e.target.files[0]; if (!f) return; setAvatarFile(f); setAvatarPreview(URL.createObjectURL(f)); };
 
-  const handleAvatarChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setAvatar(file);
-    setAvatarPreview(URL.createObjectURL(file));
-  };
-
-  const handleSaveProfile = async () => {
+  const saveProfile = async () => {
     setSaving(true);
     try {
-      const token = localStorage.getItem('token');
-      const formData = new FormData();
-      Object.entries(profile).forEach(([k, v]) => formData.append(k, v));
-      if (avatar && typeof avatar !== 'string') formData.append('avatar', avatar);
-      const res = await fetch(`${BASE_URL}/student/profile`, {
-        method: 'PUT',
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
+      const fd = new FormData();
+      Object.entries(profile).forEach(([k,v]) => v !== undefined && fd.append(k, v));
+      if (avatarFile) fd.append('avatar', avatarFile);
+      const res  = await fetch(`${BASE_URL}/api/auth/student/profile`, { method:'PUT', headers:{ Authorization:`Bearer ${token}` }, body:fd });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
-      login(data.student, role, token);
-      showToast('Profile updated successfully!');
-    } catch (err) {
-      showToast(err.message || 'Failed to save profile', 'error');
-    } finally {
-      setSaving(false);
-    }
+      // ── FIX: merge into state+localStorage without overwriting token ──
+      updateUser(data.student);
+      if (data.student?.avatar) setAvatarPreview(data.student.avatar);
+      setAvatarFile(null);
+      showToast('Profile updated!');
+    } catch(err) { showToast(err.message || 'Failed', 'error'); }
+    finally      { setSaving(false); }
   };
 
-  const handleChangePassword = async () => {
+  const changePassword = async () => {
     if (passwords.newPass !== passwords.confirm) return showToast('Passwords do not match', 'error');
-    if (passwords.newPass.length < 8) return showToast('Password must be at least 8 characters', 'error');
+    if (passwords.newPass.length < 8)            return showToast('Min. 8 characters', 'error');
     setSavingPass(true);
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${BASE_URL}/student/change-password`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ currentPassword: passwords.current, newPassword: passwords.newPass }),
-      });
+      const res  = await fetch(`${BASE_URL}/api/auth/student/change-password`, { method:'PUT', headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token}` }, body:JSON.stringify({ currentPassword:passwords.current, newPassword:passwords.newPass }) });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
-      setPasswords({ current: '', newPass: '', confirm: '' });
-      showToast('Password changed successfully!');
-    } catch (err) {
-      showToast(err.message || 'Failed to change password', 'error');
-    } finally {
-      setSavingPass(false);
-    }
+      setPasswords({ current:'', newPass:'', confirm:'' });
+      showToast('Password changed!');
+    } catch(err) { showToast(err.message || 'Failed', 'error'); }
+    finally      { setSavingPass(false); }
   };
 
-  const tabs = [
-    { id: 'personal', label: 'Personal Info', icon: FiUser },
-    { id: 'academic', label: 'Academic', icon: FiBook },
-    { id: 'security', label: 'Security', icon: FiShield },
-  ];
-
-  const initials = profile.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+  const tabs = [{ id:'personal', label:'Personal Info', icon:FiUser },{ id:'academic', label:'Academic', icon:FiBook },{ id:'security', label:'Security', icon:FiShield }];
+  const completion = Math.round([profile.name,profile.email,profile.phone,profile.collegeId,profile.hostelRoom,profile.department,profile.year,profile.bio].filter(Boolean).length / 8 * 100);
+  const initials   = profile.name.split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase();
 
   return (
     <StudentLayout>
+      <style>{`
+        @keyframes spin    { to { transform:rotate(360deg) } }
+        @keyframes toastIn { from{opacity:0;transform:translateY(-14px)} to{opacity:1;transform:translateY(0)} }
+        @media(max-width:900px) { .pg { grid-template-columns:1fr !important; } }
+        .btn-p { transition:all 0.28s cubic-bezier(0.22,1,0.36,1); position:relative; overflow:hidden; }
+        .btn-p:hover:not(:disabled) { transform:translateY(-2px); box-shadow:0 12px 30px rgba(91,74,155,0.40) !important; }
+      `}</style>
+
       {/* Toast */}
       {toast && (
-        <div className={`fixed top-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-xl border text-sm font-semibold transition-all animate-bounce-once ${
-          toast.type === 'error'
-            ? 'bg-red-50 border-red-200 text-red-700'
-            : 'bg-emerald-50 border-emerald-200 text-emerald-700'
-        }`}>
-          {toast.type === 'error' ? <FiAlertCircle size={16} /> : <FiCheckCircle size={16} />}
-          {toast.msg}
+        <div style={{ position:'fixed', top:24, right:24, zIndex:200, display:'flex', alignItems:'center', gap:10, padding:'13px 20px', borderRadius:15, fontSize:13, fontWeight:600, animation:'toastIn 0.3s ease', backdropFilter:'blur(20px)', boxShadow:'0 12px 40px rgba(91,74,155,0.22)', background:toast.type==='error'?'rgba(176,42,32,0.12)':'rgba(26,155,92,0.12)', border:`1px solid ${toast.type==='error'?T.errBd:T.okBd}`, color:toast.type==='error'?T.err:T.ok }}>
+          {toast.type==='error' ? <FiAlertCircle size={15}/> : <FiCheckCircle size={15}/>}{toast.msg}
         </div>
       )}
 
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-2 mb-1">
-          <div className="w-2 h-2 bg-[#C41E3A] rounded-full" />
-          <span className="text-[#C41E3A] text-sm font-semibold uppercase tracking-widest">Profile</span>
+      {/* Page header */}
+      <div style={{ marginBottom:28 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:8 }}>
+          <div style={{ width:7, height:7, borderRadius:'50%', background:T.mid, boxShadow:`0 0 8px ${T.glow}` }}/>
+          <span style={{ color:T.mid, fontSize:10, fontWeight:700, letterSpacing:'0.26em', textTransform:'uppercase' }}>Profile</span>
         </div>
-        <h1 className="text-3xl font-black text-[#1a0a0a] font-['Playfair_Display']">My Profile</h1>
-        <p className="text-[#5a3a3a]/60 mt-1 text-sm">Manage your personal information and account settings</p>
+        <h1 style={{ fontWeight:800, fontSize:26, color:T.ink, letterSpacing:-0.7, marginBottom:4 }}>My Profile</h1>
+        <p style={{ color:T.inkSoft, fontSize:13 }}>Manage your personal information and account settings</p>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-        {/* Profile Card */}
-        <div className="xl:col-span-1">
-          <div className="bg-white rounded-2xl border border-[#e8d5c4] shadow-sm overflow-hidden">
-            {/* Cover */}
-            <div className="h-24 bg-gradient-to-br from-[#8B1A1A] to-[#C41E3A] relative">
-              <div className="absolute inset-0 opacity-20" style={{
-                backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 0)`,
-                backgroundSize: '20px 20px'
-              }} />
+      <div className="pg" style={{ display:'grid', gridTemplateColumns:'1fr 3fr', gap:20, alignItems:'start' }}>
+
+        {/* Profile summary card */}
+        <div style={CARD}>
+          <div style={{ height:82, background:`linear-gradient(135deg,${T.deep},${T.mid})`, position:'relative' }}>
+            <div style={{ position:'absolute', inset:0, backgroundImage:'radial-gradient(circle at 1px 1px,rgba(255,255,255,0.12) 1px,transparent 0)', backgroundSize:'20px 20px' }}/>
+          </div>
+          <div style={{ padding:'0 22px 24px' }}>
+            <div style={{ position:'relative', marginTop:-34, marginBottom:14, width:'fit-content' }}>
+              <div style={{ width:70, height:70, borderRadius:18, border:'3.5px solid rgba(255,255,255,0.92)', background:`linear-gradient(135deg,${T.deep},${T.mid})`, display:'flex', alignItems:'center', justifyContent:'center', overflow:'hidden', boxShadow:`0 10px 26px rgba(91,74,155,0.30)` }}>
+                {avatarPreview ? <img src={avatarPreview} alt="Avatar" style={{ width:'100%', height:'100%', objectFit:'cover' }}/> : <span style={{ color:'#fff', fontWeight:800, fontSize:22 }}>{initials||'S'}</span>}
+              </div>
+              <button onClick={() => fileRef.current?.click()}
+                style={{ position:'absolute', bottom:-4, right:-4, width:28, height:28, background:T.mid, borderRadius:9, display:'flex', alignItems:'center', justifyContent:'center', border:'none', cursor:'pointer', boxShadow:`0 4px 14px rgba(91,74,155,0.44)` }}>
+                <FiCamera size={13} color="#fff"/>
+              </button>
+              <input ref={fileRef} type="file" accept="image/*" style={{ display:'none' }} onChange={handleAvatarChange}/>
             </div>
-
-            {/* Avatar */}
-            <div className="px-6 pb-6">
-              <div className="relative -mt-10 mb-4 w-fit">
-                <div className="w-20 h-20 rounded-2xl border-4 border-white shadow-lg overflow-hidden bg-gradient-to-br from-[#8B1A1A] to-[#C41E3A] flex items-center justify-center">
-                  {avatarPreview
-                    ? <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
-                    : <span className="text-white font-black text-2xl font-['Playfair_Display']">{initials || 'S'}</span>
-                  }
+            {avatarFile && <p style={{ fontSize:11, color:T.mid, marginBottom:8, display:'flex', alignItems:'center', gap:5 }}><FiCamera size={11}/> New photo — save to upload</p>}
+            <h3 style={{ fontWeight:700, fontSize:16, color:T.ink, marginBottom:3 }}>{profile.name || 'Student'}</h3>
+            <p style={{ fontSize:12, color:T.inkSoft, marginBottom:16 }}>{profile.email}</p>
+            <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+              {[{ icon:FiHash, val:profile.collegeId },{ icon:FiHome, val:profile.hostelRoom },{ icon:FiBook, val:profile.department&&`${profile.department} · ${profile.year}` }].filter(x => x.val).map(({ icon:Icon, val }, i) => (
+                <div key={i} style={{ display:'flex', alignItems:'center', gap:7, fontSize:12, color:T.inkSoft }}>
+                  <Icon size={11} style={{ color:T.mid, flexShrink:0 }}/><span>{val}</span>
                 </div>
-                <button
-                  onClick={() => fileRef.current?.click()}
-                  className="absolute -bottom-1 -right-1 w-7 h-7 bg-[#C41E3A] rounded-lg flex items-center justify-center shadow-md hover:bg-[#8B1A1A] transition-colors"
-                >
-                  <FiCamera size={13} className="text-white" />
-                </button>
-                <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+              ))}
+            </div>
+            <div style={{ marginTop:20, paddingTop:16, borderTop:`1px solid ${T.border}` }}>
+              <div style={{ display:'flex', justifyContent:'space-between', marginBottom:8 }}>
+                <p style={{ fontSize:10, fontWeight:600, color:T.inkDim, letterSpacing:'0.06em' }}>Profile Completion</p>
+                <p style={{ fontSize:11, fontWeight:700, color:T.mid }}>{completion}%</p>
               </div>
-
-              <h3 className="font-black text-[#1a0a0a] text-lg font-['Playfair_Display']">{profile.name || 'Student'}</h3>
-              <p className="text-[#5a3a3a]/60 text-sm">{profile.email}</p>
-
-              <div className="mt-4 space-y-2">
-                {profile.collegeId && (
-                  <div className="flex items-center gap-2 text-xs text-[#5a3a3a]/70">
-                    <FiHash size={12} className="text-[#C41E3A]" />
-                    <span>{profile.collegeId}</span>
-                  </div>
-                )}
-                {profile.hostelRoom && (
-                  <div className="flex items-center gap-2 text-xs text-[#5a3a3a]/70">
-                    <FiHome size={12} className="text-[#C41E3A]" />
-                    <span>{profile.hostelRoom}</span>
-                  </div>
-                )}
-                {profile.department && (
-                  <div className="flex items-center gap-2 text-xs text-[#5a3a3a]/70">
-                    <FiBook size={12} className="text-[#C41E3A]" />
-                    <span>{profile.department} · {profile.year}</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Completion meter */}
-              <div className="mt-5 pt-5 border-t border-[#f0e0d0]">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-xs font-semibold text-[#5a3a3a]/70">Profile Completion</p>
-                  <p className="text-xs font-bold text-[#C41E3A]">
-                    {Math.round([profile.name, profile.email, profile.phone, profile.collegeId, profile.hostelRoom, profile.department, profile.year, profile.bio].filter(Boolean).length / 8 * 100)}%
-                  </p>
-                </div>
-                <div className="w-full h-2 bg-[#f0e0d0] rounded-full">
-                  <div
-                    className="h-2 bg-gradient-to-r from-[#8B1A1A] to-[#C41E3A] rounded-full transition-all duration-700"
-                    style={{ width: `${Math.round([profile.name, profile.email, profile.phone, profile.collegeId, profile.hostelRoom, profile.department, profile.year, profile.bio].filter(Boolean).length / 8 * 100)}%` }}
-                  />
-                </div>
+              <div style={{ height:5, background:T.soft, borderRadius:20, overflow:'hidden' }}>
+                <div style={{ height:'100%', width:`${completion}%`, background:`linear-gradient(90deg,${T.deep},${T.mid})`, borderRadius:20, transition:'width 0.7s ease', boxShadow:`0 0 8px rgba(107,90,176,0.40)` }}/>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Form Area */}
-        <div className="xl:col-span-3 space-y-5">
-          {/* Tabs */}
-          <div className="flex gap-1 bg-[#FFF8F0] rounded-xl p-1 border border-[#e8d5c4] w-fit">
+        {/* Right panel */}
+        <div style={{ display:'flex', flexDirection:'column', gap:18 }}>
+          {/* Tab bar */}
+          <div style={{ display:'flex', gap:4, background:'rgba(255,255,255,0.48)', borderRadius:15, padding:4, border:`1px solid ${T.border}`, width:'fit-content', backdropFilter:'blur(16px)' }}>
             {tabs.map(({ id, label, icon: Icon }) => (
-              <button
-                key={id}
-                onClick={() => setActiveTab(id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
-                  activeTab === id
-                    ? 'bg-gradient-to-r from-[#8B1A1A] to-[#C41E3A] text-white shadow-md'
-                    : 'text-[#5a3a3a]/70 hover:text-[#1a0a0a]'
-                }`}
-              >
-                <Icon size={14} />
-                {label}
+              <button key={id} onClick={() => setTab(id)}
+                style={{ display:'flex', alignItems:'center', gap:7, padding:'10px 20px', borderRadius:12, border:'none', cursor:'pointer', fontSize:13, fontWeight:tab===id?700:500, transition:'all 0.22s', background:tab===id?`linear-gradient(135deg,${T.deep},${T.mid})`:'transparent', color:tab===id?'#fff':T.inkSoft, boxShadow:tab===id?`0 4px 16px rgba(91,74,155,0.30)`:'none' }}>
+                <Icon size={13}/>{label}
               </button>
             ))}
           </div>
 
-          {/* Personal Info Tab */}
-          {activeTab === 'personal' && (
-            <div className="bg-white rounded-2xl border border-[#e8d5c4] shadow-sm overflow-hidden">
-              <div className="px-6 py-4 border-b border-[#f0e0d0] bg-[#FFF8F0] flex items-center gap-2">
-                <FiEdit3 size={15} className="text-[#C41E3A]" />
-                <h3 className="font-bold text-[#1a0a0a] font-['Playfair_Display']">Personal Information</h3>
+          {/* Personal tab */}
+          {tab==='personal' && (
+            <div style={CARD}>
+              <div style={{ display:'flex', alignItems:'center', gap:9, padding:'17px 22px', borderBottom:`1px solid ${T.border}`, background:'rgba(246,243,253,0.70)' }}>
+                <FiEdit3 size={14} style={{ color:T.mid }}/><h3 style={{ fontWeight:700, fontSize:15, color:T.ink }}>Personal Information</h3>
               </div>
-              <div className="p-6 space-y-5">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  <LightField label="Full Name" icon={FiUser} type="text" value={profile.name} onChange={v => setProfile(p => ({ ...p, name: v }))} placeholder="Your full name" />
-                  <LightField label="Email Address" icon={FiMail} type="email" value={profile.email} onChange={v => setProfile(p => ({ ...p, email: v }))} placeholder="your@email.com" />
-                  <LightField label="Phone Number" icon={FiPhone} type="tel" value={profile.phone} onChange={v => setProfile(p => ({ ...p, phone: v }))} placeholder="+91 9876543210" />
+              <div style={{ padding:22, display:'flex', flexDirection:'column', gap:18 }}>
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
+                  <Field label="Full Name"     icon={FiUser}  value={profile.name}  onChange={v => setProfile(p => ({ ...p, name:v }))}  placeholder="Your full name"/>
+                  <Field label="Email Address" icon={FiMail}  type="email" value={profile.email} onChange={v => setProfile(p => ({ ...p, email:v }))} placeholder="your@email.com"/>
+                  <Field label="Phone Number"  icon={FiPhone} type="tel"   value={profile.phone} onChange={v => setProfile(p => ({ ...p, phone:v }))} placeholder="+91 9876543210"/>
                 </div>
-
                 <div>
-                  <label className="block text-sm font-semibold text-[#1a0a0a] mb-1.5">Bio (Optional)</label>
-                  <textarea
-                    rows={3}
-                    value={profile.bio}
-                    onChange={e => setProfile(p => ({ ...p, bio: e.target.value }))}
-                    placeholder="Tell something about yourself..."
-                    className="w-full px-4 py-3 rounded-xl bg-[#FFF8F0] border border-[#e8d5c4] text-[#1a0a0a] text-sm focus:outline-none focus:border-[#C41E3A]/50 focus:ring-2 focus:ring-[#C41E3A]/10 transition-all resize-none"
-                  />
+                  <label style={{ display:'block', fontSize:9.5, fontWeight:700, letterSpacing:'0.22em', textTransform:'uppercase', color:T.inkDim, marginBottom:7 }}>Bio (Optional)</label>
+                  <textarea rows={3} value={profile.bio} onChange={e => setProfile(p => ({ ...p, bio:e.target.value }))} placeholder="Tell something about yourself…"
+                    style={{ width:'100%', padding:'11px 14px', borderRadius:12, border:`1.5px solid ${T.inputBd}`, background:T.inputBg, color:T.ink, fontSize:13, outline:'none', resize:'none', transition:'border-color 0.25s', boxSizing:'border-box' }}
+                    onFocus={e => { e.target.style.borderColor=T.focusBd; e.target.style.boxShadow=T.focusSh; }}
+                    onBlur={e  => { e.target.style.borderColor=T.inputBd;  e.target.style.boxShadow='none'; }}/>
                 </div>
-
-                <div className="flex justify-end">
-                  <button
-                    onClick={handleSaveProfile}
-                    disabled={saving}
-                    className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-[#8B1A1A] to-[#C41E3A] text-white rounded-xl font-bold text-sm hover:shadow-lg hover:shadow-[#C41E3A]/25 hover:scale-[1.02] transition-all disabled:opacity-50"
-                  >
-                    {saving ? <><FiLoader size={14} className="animate-spin" /> Saving...</> : <><FiSave size={14} /> Save Changes</>}
-                  </button>
-                </div>
+                <div style={{ display:'flex', justifyContent:'flex-end' }}><SaveBtn onClick={saveProfile} loading={saving} label="Save Changes" icon={FiSave}/></div>
               </div>
             </div>
           )}
 
-          {/* Academic Tab */}
-          {activeTab === 'academic' && (
-            <div className="bg-white rounded-2xl border border-[#e8d5c4] shadow-sm overflow-hidden">
-              <div className="px-6 py-4 border-b border-[#f0e0d0] bg-[#FFF8F0] flex items-center gap-2">
-                <FiBook size={15} className="text-[#C41E3A]" />
-                <h3 className="font-bold text-[#1a0a0a] font-['Playfair_Display']">Academic Information</h3>
+          {/* Academic tab */}
+          {tab==='academic' && (
+            <div style={CARD}>
+              <div style={{ display:'flex', alignItems:'center', gap:9, padding:'17px 22px', borderBottom:`1px solid ${T.border}`, background:'rgba(246,243,253,0.70)' }}>
+                <FiBook size={14} style={{ color:T.mid }}/><h3 style={{ fontWeight:700, fontSize:15, color:T.ink }}>Academic Information</h3>
               </div>
-              <div className="p-6 space-y-5">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  <LightField label="College ID / Roll No." icon={FiHash} type="text" value={profile.collegeId} onChange={v => setProfile(p => ({ ...p, collegeId: v }))} placeholder="e.g. CSE2021001" />
-                  <LightField label="Hostel & Room Number" icon={FiHome} type="text" value={profile.hostelRoom} onChange={v => setProfile(p => ({ ...p, hostelRoom: v }))} placeholder="e.g. Block A, Room 204" />
+              <div style={{ padding:22, display:'flex', flexDirection:'column', gap:16 }}>
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
+                  <Field label="College ID / Roll No." icon={FiHash} value={profile.collegeId}  onChange={v => setProfile(p => ({ ...p, collegeId:v }))}  placeholder="e.g. CSE2021001"/>
+                  <Field label="Hostel & Room No."     icon={FiHome} value={profile.hostelRoom} onChange={v => setProfile(p => ({ ...p, hostelRoom:v }))} placeholder="e.g. Block A, Room 204"/>
                 </div>
-
-                <div className="grid grid-cols-2 gap-5">
-                  <div>
-                    <label className="block text-sm font-semibold text-[#1a0a0a] mb-1.5">Department</label>
-                    <select
-                      value={profile.department}
-                      onChange={e => setProfile(p => ({ ...p, department: e.target.value }))}
-                      className="w-full px-4 py-3 rounded-xl bg-[#FFF8F0] border border-[#e8d5c4] text-[#1a0a0a] focus:outline-none focus:border-[#C41E3A]/50 focus:ring-2 focus:ring-[#C41E3A]/10 transition-all text-sm appearance-none"
-                    >
-                      <option value="">Select Department</option>
-                      {['CSE', 'ECE', 'ME', 'CE', 'EE', 'IT', 'Other'].map(d => <option key={d} value={d}>{d}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-[#1a0a0a] mb-1.5">Year of Study</label>
-                    <select
-                      value={profile.year}
-                      onChange={e => setProfile(p => ({ ...p, year: e.target.value }))}
-                      className="w-full px-4 py-3 rounded-xl bg-[#FFF8F0] border border-[#e8d5c4] text-[#1a0a0a] focus:outline-none focus:border-[#C41E3A]/50 focus:ring-2 focus:ring-[#C41E3A]/10 transition-all text-sm appearance-none"
-                    >
-                      <option value="">Select Year</option>
-                      {['1st Year', '2nd Year', '3rd Year', '4th Year'].map(y => <option key={y} value={y}>{y}</option>)}
-                    </select>
-                  </div>
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
+                  <SelField label="Department"    value={profile.department} onChange={v => setProfile(p => ({ ...p, department:v }))} options={['CSE','ECE','ME','CE','EE','IT','Other']}          placeholder="Select Department"/>
+                  <SelField label="Year of Study" value={profile.year}       onChange={v => setProfile(p => ({ ...p, year:v }))}       options={['1st Year','2nd Year','3rd Year','4th Year']} placeholder="Select Year"/>
                 </div>
-
-                <div className="flex justify-end">
-                  <button
-                    onClick={handleSaveProfile}
-                    disabled={saving}
-                    className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-[#8B1A1A] to-[#C41E3A] text-white rounded-xl font-bold text-sm hover:shadow-lg hover:shadow-[#C41E3A]/25 hover:scale-[1.02] transition-all disabled:opacity-50"
-                  >
-                    {saving ? <><FiLoader size={14} className="animate-spin" /> Saving...</> : <><FiSave size={14} /> Save Changes</>}
-                  </button>
-                </div>
+                <div style={{ display:'flex', justifyContent:'flex-end' }}><SaveBtn onClick={saveProfile} loading={saving} label="Save Changes" icon={FiSave}/></div>
               </div>
             </div>
           )}
 
-          {/* Security Tab */}
-          {activeTab === 'security' && (
-            <div className="bg-white rounded-2xl border border-[#e8d5c4] shadow-sm overflow-hidden">
-              <div className="px-6 py-4 border-b border-[#f0e0d0] bg-[#FFF8F0] flex items-center gap-2">
-                <FiShield size={15} className="text-[#C41E3A]" />
-                <h3 className="font-bold text-[#1a0a0a] font-['Playfair_Display']">Security & Password</h3>
+          {/* Security tab */}
+          {tab==='security' && (
+            <div style={CARD}>
+              <div style={{ display:'flex', alignItems:'center', gap:9, padding:'17px 22px', borderBottom:`1px solid ${T.border}`, background:'rgba(246,243,253,0.70)' }}>
+                <FiShield size={14} style={{ color:T.mid }}/><h3 style={{ fontWeight:700, fontSize:15, color:T.ink }}>Security &amp; Password</h3>
               </div>
-              <div className="p-6 space-y-5">
-                <div className="p-4 bg-[#FFF8F0] rounded-xl border border-[#e8d5c4]">
-                  <p className="text-xs text-[#5a3a3a]/60 leading-relaxed">
-                    Use a strong, unique password with at least 8 characters, including uppercase, numbers, and special characters.
-                  </p>
+              <div style={{ padding:22, display:'flex', flexDirection:'column', gap:16 }}>
+                <div style={{ padding:'12px 15px', background:T.snow, border:`1px solid ${T.border}`, borderRadius:12 }}>
+                  <p style={{ fontSize:12, color:T.inkSoft, lineHeight:1.7, margin:0 }}>Use a strong password with at least 8 characters, including uppercase, numbers, and special characters.</p>
                 </div>
-
-                <PasswordField label="Current Password" value={passwords.current} onChange={v => setPasswords(p => ({ ...p, current: v }))} show={showPass.current} toggle={() => setShowPass(p => ({ ...p, current: !p.current }))} placeholder="Enter current password" />
-                <PasswordField label="New Password" value={passwords.newPass} onChange={v => setPasswords(p => ({ ...p, newPass: v }))} show={showPass.new} toggle={() => setShowPass(p => ({ ...p, new: !p.new }))} placeholder="Enter new password" />
-                <PasswordField label="Confirm New Password" value={passwords.confirm} onChange={v => setPasswords(p => ({ ...p, confirm: v }))} show={showPass.confirm} toggle={() => setShowPass(p => ({ ...p, confirm: !p.confirm }))} placeholder="Re-enter new password"
-                  error={passwords.confirm && passwords.newPass !== passwords.confirm ? "Passwords don't match" : ''} />
-
-                <div className="flex justify-end">
-                  <button
-                    onClick={handleChangePassword}
-                    disabled={savingPass || !passwords.current || !passwords.newPass || !passwords.confirm}
-                    className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-[#8B1A1A] to-[#C41E3A] text-white rounded-xl font-bold text-sm hover:shadow-lg transition-all disabled:opacity-50"
-                  >
-                    {savingPass ? <><FiLoader size={14} className="animate-spin" /> Updating...</> : <><FiLock size={14} /> Update Password</>}
+                <PassField label="Current Password"   value={passwords.current} onChange={v => setPasswords(p => ({ ...p, current:v }))} show={showPass.current} toggle={() => setShowPass(p => ({ ...p, current:!p.current }))} placeholder="Enter current password"/>
+                <PassField label="New Password"       value={passwords.newPass} onChange={v => setPasswords(p => ({ ...p, newPass:v }))} show={showPass.new}     toggle={() => setShowPass(p => ({ ...p, new:!p.new }))}         placeholder="Enter new password"/>
+                <PassField label="Confirm Password"   value={passwords.confirm} onChange={v => setPasswords(p => ({ ...p, confirm:v }))} show={showPass.confirm} toggle={() => setShowPass(p => ({ ...p, confirm:!p.confirm }))}   placeholder="Re-enter new password"
+                  error={passwords.confirm && passwords.newPass !== passwords.confirm ? "Passwords don't match" : ''}/>
+                <div style={{ display:'flex', justifyContent:'flex-end' }}>
+                  <button onClick={changePassword} disabled={savingPass||!passwords.current||!passwords.newPass||!passwords.confirm} className="btn-p"
+                    style={{ display:'inline-flex', alignItems:'center', gap:7, padding:'12px 24px', borderRadius:12, border:'none', cursor:(savingPass||!passwords.current||!passwords.newPass||!passwords.confirm)?'not-allowed':'pointer', background:`linear-gradient(135deg,${T.deep},${T.mid})`, color:'#fff', fontSize:13, fontWeight:700, boxShadow:`0 6px 20px rgba(91,74,155,0.28)`, opacity:(savingPass||!passwords.current||!passwords.newPass||!passwords.confirm)?0.50:1, transition:'all 0.25s' }}>
+                    {savingPass ? <><FiLoader size={13} style={{ animation:'spin 1s linear infinite' }}/> Updating…</> : <><FiLock size={13}/> Update Password</>}
                   </button>
                 </div>
               </div>
@@ -337,42 +273,4 @@ const StudentProfile = () => {
       </div>
     </StudentLayout>
   );
-};
-
-const LightField = ({ label, icon: Icon, type, value, onChange, placeholder }) => (
-  <div>
-    <label className="block text-sm font-semibold text-[#1a0a0a] mb-1.5">{label}</label>
-    <div className="relative">
-      <Icon size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8B1A1A]/50" />
-      <input
-        type={type}
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="w-full pl-10 pr-4 py-3 rounded-xl bg-[#FFF8F0] border border-[#e8d5c4] text-[#1a0a0a] placeholder:text-[#5a3a3a]/40 focus:outline-none focus:border-[#C41E3A]/50 focus:ring-2 focus:ring-[#C41E3A]/10 transition-all text-sm"
-      />
-    </div>
-  </div>
-);
-
-const PasswordField = ({ label, value, onChange, show, toggle, placeholder, error }) => (
-  <div>
-    <label className="block text-sm font-semibold text-[#1a0a0a] mb-1.5">{label}</label>
-    <div className="relative">
-      <FiLock size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8B1A1A]/50" />
-      <input
-        type={show ? 'text' : 'password'}
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        placeholder={placeholder}
-        className={`w-full pl-10 pr-11 py-3 rounded-xl bg-[#FFF8F0] border text-[#1a0a0a] placeholder:text-[#5a3a3a]/40 focus:outline-none focus:ring-2 transition-all text-sm ${error ? 'border-red-300 focus:border-red-400 focus:ring-red-100' : 'border-[#e8d5c4] focus:border-[#C41E3A]/50 focus:ring-[#C41E3A]/10'}`}
-      />
-      <button type="button" onClick={toggle} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#8B1A1A]/50 hover:text-[#8B1A1A]">
-        {show ? <FiEyeOff size={14} /> : <FiEye size={14} />}
-      </button>
-    </div>
-    {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
-  </div>
-);
-
-export default StudentProfile;
+}

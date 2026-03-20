@@ -1,130 +1,97 @@
 // src/components/AIInsightCard.jsx
+// Already updated in a previous batch with the full teal/navy theme.
+// This file is the canonical updated version.
+
 import { Zap, ChevronDown, ChevronUp, CheckCircle, AlertTriangle, XCircle } from "lucide-react";
 import { useState } from "react";
+
+const C = {
+  magentaMid:'#8E2A7A', magentaBright:'#A23B88',
+  green:'#34D399', greenBg:'rgba(52,211,153,0.12)', greenBorder:'rgba(52,211,153,0.3)',
+  red:'#F87171', redBg:'rgba(248,113,113,0.12)', redBorder:'rgba(248,113,113,0.3)',
+  amberLight:'#A23B88', amberBg:'rgba(162,59,136,0.12)', amberBorder:'rgba(162,59,136,0.3)',
+  slateText:'rgba(31,41,55,0.7)', white:'#1F2937',
+};
+
+const recommendations = {
+  "auto-approve":  { label:"Auto Approve",  icon:<CheckCircle size={12}/>,   bg:C.greenBg,  border:C.greenBorder,  text:C.green        },
+  "manual-review": { label:"Manual Review", icon:<AlertTriangle size={12}/>, bg:C.amberBg,  border:C.amberBorder,  text:C.amberLight   },
+  reject:          { label:"Reject",        icon:<XCircle size={12}/>,       bg:C.redBg,    border:C.redBorder,    text:C.red          },
+};
 
 export default function AIInsightCard({ insight, loading = false }) {
   const [expanded, setExpanded] = useState(false);
 
-  if (loading) {
-    return (
-      <div className="bg-white rounded-2xl border border-cream-100 shadow-card p-5">
-        <div className="flex items-center gap-2 mb-4">
-          <div className="shimmer w-8 h-8 rounded-lg"></div>
-          <div className="shimmer h-4 w-32 rounded"></div>
-        </div>
-        <div className="space-y-2">
-          <div className="shimmer h-3 w-full rounded"></div>
-          <div className="shimmer h-3 w-4/5 rounded"></div>
-          <div className="shimmer h-3 w-3/5 rounded"></div>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return (
+    <div style={{ background:'rgba(245,240,250,0.95)', border:'1px solid rgba(162,59,136,0.15)', borderRadius:18, padding:20, backdropFilter:'blur(16px)' }}>
+      <style>{`@keyframes shimAI{0%,100%{opacity:1}50%{opacity:0.3}}`}</style>
+      {[80,'100%','80%','60%'].map((w,i) => (
+        <div key={i} style={{ height:i===0?32:12, width:w, background:'rgba(255,255,255,0.07)', borderRadius:8, marginBottom:12, animation:'shimAI 1.4s ease infinite', animationDelay:`${i*0.15}s` }}/>
+      ))}
+    </div>
+  );
 
   if (!insight) return null;
-
-  const recommendations = {
-    "auto-approve": {
-      label: "Auto Approve",
-      icon: <CheckCircle size={14} />,
-      cls: "bg-green-50 text-green-700 border-green-200",
-    },
-    "manual-review": {
-      label: "Manual Review",
-      icon: <AlertTriangle size={14} />,
-      cls: "bg-amber-50 text-amber-700 border-amber-200",
-    },
-    reject: {
-      label: "Reject",
-      icon: <XCircle size={14} />,
-      cls: "bg-red-50 text-red-600 border-red-200",
-    },
-  };
 
   const rec = recommendations[insight.recommendation] || recommendations["manual-review"];
 
   return (
-    <div className="bg-white rounded-2xl border border-cream-100 shadow-card overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-cream-50">
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 bg-gradient-to-br from-burgundy to-burgundy-700 rounded-xl flex items-center justify-center shadow-sm">
-            <Zap size={16} className="text-cream" />
+    <div style={{ background:'rgba(245,240,250,0.95)', border:`1px solid rgba(162,59,136,0.15)`, borderRadius:18, overflow:'hidden', backdropFilter:'blur(16px)', boxShadow:'0 8px 30px rgba(162,59,136,0.1)', fontFamily:'DM Sans,sans-serif' }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');*{box-sizing:border-box;}`}</style>
+      <div style={{ height:2, background:`linear-gradient(90deg,transparent,#A23B88,transparent)` }}/>
+
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'16px 18px', borderBottom:'1px solid rgba(255,255,255,0.07)' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+          <div style={{ width:38, height:38, background:`linear-gradient(135deg,${C.magentaMid},${C.magentaBright})`, borderRadius:11, display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 4px 16px rgba(162,59,136,0.35)' }}>
+            <Zap size={17} color="#fff"/>
           </div>
           <div>
-            <p className="font-semibold text-burgundy text-sm">AI Analysis</p>
-            <p className="text-[10px] text-burgundy/40">Powered by LangChain</p>
+            <p style={{ fontWeight:700, color:C.magentaBright, fontSize:13, marginBottom:2, fontFamily:'DM Sans,sans-serif' }}>AI Analysis</p>
+            <p style={{ fontSize:10, color:'rgba(162,59,136,0.6)', fontFamily:'DM Mono,monospace' }}>Powered by LangChain</p>
           </div>
         </div>
-        <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border ${rec.cls}`}>
-          {rec.icon}
-          {rec.label}
+        <span style={{ display:'inline-flex', alignItems:'center', gap:5, fontSize:11, fontWeight:700, padding:'5px 12px', borderRadius:100, background:rec.bg, border:`1px solid ${rec.border}`, color:rec.text }}>
+          {rec.icon}{rec.label}
         </span>
       </div>
 
-      {/* Summary */}
-      <div className="p-4">
-        <p className="text-sm text-burgundy/80 leading-relaxed">
-          {insight.summary || "AI analysis in progress..."}
-        </p>
+      <div style={{ padding:'16px 18px' }}>
+        <p style={{ fontSize:13, color:'rgba(220,230,255,0.7)', lineHeight:1.75, fontFamily:'DM Sans,sans-serif' }}>{insight.summary || "AI analysis in progress…"}</p>
 
-        {/* Consent Score */}
         {insight.consentScore !== undefined && (
-          <div className="mt-4">
-            <div className="flex items-center justify-between mb-1.5">
-              <p className="text-xs font-semibold text-burgundy/60 uppercase tracking-wide">
-                Consent Confidence
-              </p>
-              <p className="text-sm font-bold font-mono text-burgundy">
-                {insight.consentScore}%
-              </p>
+          <div style={{ marginTop:16 }}>
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:8 }}>
+              <p style={{ fontSize:9, fontWeight:700, color:'rgba(220,230,255,0.4)', textTransform:'uppercase', letterSpacing:'0.2em', fontFamily:'DM Mono,monospace' }}>Consent Confidence</p>
+              <p style={{ fontSize:15, fontWeight:800, color:insight.consentScore>=80?C.green:insight.consentScore>=50?C.amberLight:C.red, fontFamily:'Space Grotesk,sans-serif' }}>{insight.consentScore}%</p>
             </div>
-            <div className="h-2 bg-cream-100 rounded-full overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all duration-700 ${
-                  insight.consentScore >= 80
-                    ? "bg-green-400"
-                    : insight.consentScore >= 50
-                    ? "bg-amber-400"
-                    : "bg-red-400"
-                }`}
-                style={{ width: `${insight.consentScore}%` }}
-              ></div>
+            <div style={{ height:5, background:'rgba(255,255,255,0.07)', borderRadius:20, overflow:'hidden' }}>
+              <div style={{ height:'100%', width:`${insight.consentScore}%`, borderRadius:20, background:insight.consentScore>=80?C.green:insight.consentScore>=50?C.amberLight:C.red, transition:'width 0.7s ease', boxShadow:`0 0 10px ${insight.consentScore>=80?C.green:insight.consentScore>=50?C.amberLight:C.red}60` }}/>
             </div>
           </div>
         )}
 
-        {/* Key Extractions */}
         {insight.extractedData && (
-          <div className="mt-4 grid grid-cols-2 gap-2">
-            {Object.entries(insight.extractedData).map(([key, val]) => (
-              <div key={key} className="bg-cream-50 rounded-xl px-3 py-2">
-                <p className="text-[10px] font-semibold text-burgundy/40 uppercase tracking-wide">
-                  {key.replace(/([A-Z])/g, " $1").trim()}
-                </p>
-                <p className="text-xs font-medium text-burgundy mt-0.5">{val || "—"}</p>
+          <div style={{ marginTop:14, display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
+            {Object.entries(insight.extractedData).map(([key,val]) => (
+              <div key={key} style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:10, padding:'9px 12px' }}>
+                <p style={{ fontSize:9, fontWeight:700, color:'rgba(220,230,255,0.3)', textTransform:'uppercase', letterSpacing:'0.18em', fontFamily:'DM Mono,monospace', marginBottom:4 }}>{key.replace(/([A-Z])/g," $1").trim()}</p>
+                <p style={{ fontSize:12, fontWeight:600, color:'rgba(220,230,255,0.75)', fontFamily:'DM Sans,sans-serif' }}>{val || "—"}</p>
               </div>
             ))}
           </div>
         )}
 
-        {/* Flags */}
         {insight.flags && insight.flags.length > 0 && (
-          <div className="mt-4">
-            <button
-              onClick={() => setExpanded(!expanded)}
-              className="flex items-center gap-1.5 text-xs font-semibold text-amber-600 hover:text-amber-700 transition-colors"
-            >
-              <AlertTriangle size={13} />
-              {insight.flags.length} Flag{insight.flags.length > 1 ? "s" : ""} Detected
-              {expanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+          <div style={{ marginTop:14 }}>
+            <button onClick={() => setExpanded(!expanded)} style={{ display:'flex', alignItems:'center', gap:6, background:'none', border:'none', cursor:'pointer', color:C.amberLight, fontSize:12, fontWeight:700, fontFamily:'DM Sans,sans-serif', padding:0 }}>
+              <AlertTriangle size={13}/>{insight.flags.length} Flag{insight.flags.length>1?"s":""} Detected
+              {expanded ? <ChevronUp size={13}/> : <ChevronDown size={13}/>}
             </button>
             {expanded && (
-              <ul className="mt-2 space-y-1.5 animate-slide-up">
-                {insight.flags.map((flag, i) => (
-                  <li key={i} className="flex items-start gap-2 text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2 border border-amber-100">
-                    <AlertTriangle size={11} className="mt-0.5 flex-shrink-0" />
-                    {flag}
+              <ul style={{ marginTop:8, listStyle:'none', padding:0, display:'flex', flexDirection:'column', gap:6 }}>
+                {insight.flags.map((flag,i) => (
+                  <li key={i} style={{ display:'flex', alignItems:'flex-start', gap:7, fontSize:12, color:'rgba(245,190,88,0.85)', background:'rgba(245,190,88,0.07)', border:'1px solid rgba(245,190,88,0.18)', borderRadius:8, padding:'8px 11px', fontFamily:'DM Sans,sans-serif' }}>
+                    <AlertTriangle size={11} style={{ marginTop:1, flexShrink:0 }}/>{flag}
                   </li>
                 ))}
               </ul>

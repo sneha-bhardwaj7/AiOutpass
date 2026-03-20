@@ -1,5 +1,6 @@
+// backend/routes/authRoutes.js
 const express = require("express");
-const multer = require("multer");  // ← ADD THIS
+const multer  = require("multer");
 const {
   studentSignup,
   parentSignup,
@@ -9,31 +10,33 @@ const {
   updateAdminProfile,
   changeAdminPassword,
   updateStudentProfile,
-  changeStudentPassword      
+  changeStudentPassword,
 } = require("../controllers/authController");
 const protect = require("../middleware/authMiddleware");
 
-const upload = multer({ dest: "uploads/" });  // ← ADD THIS
+// ── Use memoryStorage so the file.buffer is available for Cloudinary
+//    (no files are written to disk)
+const upload = multer({ storage: multer.memoryStorage() });
 
 const router = express.Router();
 
-// STUDENT
+// ── Auth ──────────────────────────────────────────────────────────────────────
 router.post("/student/signup", studentSignup);
-router.post("/student/login", loginUser);
-// PARENT
-router.post("/parent/signup", parentSignup);
-router.post("/parent/login", loginUser);
-// ADMIN
-router.post("/admin/signup", adminSignup);
-router.post("/admin/login", loginUser);
-// PROFILE
-router.get("/profile", protect, getProfile);
-// ADMIN PROFILE UPDATE
-router.put("/admin/profile", protect, upload.single("avatar"), updateAdminProfile);
-router.put("/admin/change-password", protect, changeAdminPassword);
+router.post("/student/login",  loginUser);
+router.post("/parent/signup",  parentSignup);
+router.post("/parent/login",   loginUser);
+router.post("/admin/signup",   adminSignup);
+router.post("/admin/login",    loginUser);
 
-// Add these routes:
-router.put("/student/profile", protect, upload.single("avatar"), updateStudentProfile);
+// ── Profile ───────────────────────────────────────────────────────────────────
+router.get("/profile", protect, getProfile);
+
+// ── Student profile / password ────────────────────────────────────────────────
+router.put("/student/profile",         protect, upload.single("avatar"), updateStudentProfile);
 router.put("/student/change-password", protect, changeStudentPassword);
+
+// ── Admin profile / password ──────────────────────────────────────────────────
+router.put("/admin/profile",         protect, upload.single("avatar"), updateAdminProfile);
+router.put("/admin/change-password", protect, changeAdminPassword);
 
 module.exports = router;

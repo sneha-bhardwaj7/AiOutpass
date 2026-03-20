@@ -12,8 +12,8 @@ const statusConfig = {
   pending: {
     label: "Pending",
     icon: <Clock size={12} />,
-    className: "bg-amber-50 text-amber-700 border-amber-200",
-    dot: "bg-amber-400",
+    className: "bg-pink-50 text-pink-700 border-pink-200",
+    dot: "bg-pink-400",
   },
   approved: {
     label: "Approved",
@@ -48,8 +48,8 @@ const statusConfig = {
   "parent-pending": {
     label: "Awaiting Parent",
     icon: <Clock size={12} />,
-    className: "bg-yellow-50 text-yellow-700 border-yellow-200",
-    dot: "bg-yellow-400",
+    className: "bg-rose-50 text-rose-700 border-rose-200",
+    dot: "bg-rose-400",
   },
 };
 

@@ -1,40 +1,36 @@
+// src/pages/LandingPage.jsx
 import { useState, useEffect, useRef } from 'react';
-import { FiArrowRight, FiShield, FiZap, FiUsers, FiCheckCircle, FiMenu, FiX, FiEye, FiLock, FiBarChart2, FiBell } from 'react-icons/fi';
-import { MdOutlineSchool, MdOutlineVerified, MdAutoAwesome } from 'react-icons/md';
+import {
+  FiArrowRight, FiShield, FiZap, FiUsers, FiCheckCircle,
+  FiMenu, FiX, FiEye, FiLock, FiBarChart2, FiBell,
+  FiChevronLeft, FiChevronRight, FiStar, FiActivity
+} from 'react-icons/fi';
+import { MdOutlineSchool, MdAutoAwesome, MdOutlineDashboard, MdOutlineVerifiedUser } from 'react-icons/md';
 import { HiOutlineSparkles } from 'react-icons/hi';
+import { RiBrainLine, RiShieldCheckLine, RiBarChartBoxLine, RiNotificationLine, RiLockPasswordLine, RiFileTextLine } from 'react-icons/ri';
 
-/* ─── Color Tokens — Midnight Teal × Amber × Slate ─── */
+/* ── Palette ── */
 const C = {
-  // Core darks
-  inkBlack:    '#080C14',
-  navyDeep:    '#0A1628',
-  navyMid:     '#0F2347',
-  navyLight:   '#1A3A6B',
-
-  // Teal / Emerald accents
-  tealDeep:    '#0D4F4F',
-  tealMid:     '#0A7C7C',
-  tealBright:  '#0FB5B5',
-  tealGlow:    '#1DE8E8',
-
-  // Amber / Gold
-  amber:       '#E8A020',
-  amberLight:  '#F5BE58',
-  amberPale:   '#FDE68A',
-
-  // Slate / Silver
-  slateGlass:  'rgba(255,255,255,0.04)',
-  slateBorder: 'rgba(255,255,255,0.08)',
-  slateText:   'rgba(220,230,255,0.55)',
-  slateLight:  'rgba(220,230,255,0.75)',
-
-  // Text
-  white:       '#F0F6FF',
-  offWhite:    '#D4E4FF',
+  pageBg:      '#F3F0FB',
+  sectionAlt:  '#EBE6F7',
+  deep:        '#6B5BA4',
+  mid:         '#7C6BB5',
+  bright:      '#9B8DC9',
+  light:       '#B8ADDA',
+  pale:        '#D8D0EE',
+  superPale:   '#EDE9F5',
+  ultraPale:   '#F7F4FC',
+  accent:      '#F4A732',
+  textDark:    '#1E1535',
+  textMid:     '#3D2E6B',
+  textLight:   'rgba(61,46,107,0.58)',
+  textDimmed:  'rgba(61,46,107,0.36)',
+  border:      'rgba(155,141,201,0.20)',
+  cardBg:      '#FFFFFF',
 };
 
-/* ─── useInView ─── */
-function useInView(threshold = 0.12) {
+/* ── useInView ── */
+function useInView(threshold = 0.1) {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
   useEffect(() => {
@@ -47,779 +43,744 @@ function useInView(threshold = 0.12) {
   return [ref, visible];
 }
 
-/* ─── Animated Counter ─── */
-function Counter({ target, suffix = '' }) {
-  const [val, setVal] = useState(0);
-  const [ref, visible] = useInView();
-  useEffect(() => {
-    if (!visible) return;
-    const isDecimal = String(target).includes('.');
-    const end = parseFloat(target);
-    const duration = 2000;
-    const start = performance.now();
-    const tick = (now) => {
-      const p = Math.min((now - start) / duration, 1);
-      const ease = 1 - Math.pow(1 - p, 4);
-      setVal(isDecimal ? (ease * end).toFixed(1) : Math.round(ease * end));
-      if (p < 1) requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
-  }, [visible, target]);
-  return <span ref={ref}>{val}{suffix}</span>;
+/* ── Fixed page background with waves + orbs ── */
+function PageBackground() {
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+      {/* Base gradient */}
+      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(155deg, #EAE4F6 0%, #DDD5EE 35%, #CFC6E5 65%, #C4B8DC 100%)' }} />
+
+      {/* Top-right large glowing orb */}
+      <div style={{
+        position: 'absolute', top: '-14%', right: '-10%',
+        width: 700, height: 700, borderRadius: '50%',
+        background: 'radial-gradient(circle at 38% 38%, rgba(200,190,232,0.70) 0%, rgba(155,141,201,0.32) 45%, transparent 70%)',
+      }} />
+
+      {/* Bottom-left soft orb */}
+      <div style={{
+        position: 'absolute', bottom: '-12%', left: '-8%',
+        width: 520, height: 520, borderRadius: '50%',
+        background: 'radial-gradient(circle at 62% 62%, rgba(107,91,164,0.18) 0%, rgba(155,141,201,0.10) 55%, transparent 72%)',
+      }} />
+
+      {/* Center floating orb */}
+      <div style={{
+        position: 'absolute', top: '35%', left: '40%',
+        width: 320, height: 320, borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(216,208,238,0.38) 0%, transparent 70%)',
+        animation: 'floatOrb 10s ease-in-out infinite',
+      }} />
+
+      {/* Small top-left orb */}
+      <div style={{
+        position: 'absolute', top: '8%', left: '5%',
+        width: 200, height: 200, borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(184,173,218,0.30) 0%, transparent 70%)',
+        animation: 'floatOrb 7s ease-in-out 2s infinite',
+      }} />
+
+      {/* SVG bottom waves — the swooping curves from the image */}
+      <svg style={{ position: 'absolute', bottom: 0, left: 0, width: '100%' }} viewBox="0 0 1440 280" preserveAspectRatio="none">
+        <path fill="rgba(107,91,164,0.10)" d="M0,160 C200,220 400,80 600,140 C800,200 1000,60 1200,120 C1320,150 1400,100 1440,110 L1440,280 L0,280 Z" />
+        <path fill="rgba(155,141,201,0.08)" d="M0,200 C300,140 500,260 750,190 C1000,120 1200,220 1440,180 L1440,280 L0,280 Z" />
+        <path fill="rgba(184,173,218,0.06)" d="M0,240 C240,200 480,260 720,230 C960,200 1200,250 1440,220 L1440,280 L0,280 Z" />
+      </svg>
+
+      {/* Mid-page horizontal wave sweep */}
+      <svg style={{ position: 'absolute', top: '48%', left: 0, width: '100%' }} viewBox="0 0 1440 160" preserveAspectRatio="none">
+        <path fill="rgba(107,91,164,0.06)" d="M0,50 C180,100 360,10 540,60 C720,110 900,20 1080,70 C1260,120 1380,40 1440,55 L1440,160 L0,160 Z" />
+      </svg>
+
+      {/* Diagonal light streak */}
+      <div style={{
+        position: 'absolute', top: '15%', left: '-15%',
+        width: '130%', height: '1px',
+        background: 'linear-gradient(90deg, transparent, rgba(184,173,218,0.35) 40%, rgba(200,190,232,0.45) 60%, transparent)',
+        transform: 'rotate(-6deg)',
+      }} />
+      <div style={{
+        position: 'absolute', top: '17%', left: '-15%',
+        width: '130%', height: '1px',
+        background: 'linear-gradient(90deg, transparent, rgba(155,141,201,0.15) 40%, rgba(184,173,218,0.22) 60%, transparent)',
+        transform: 'rotate(-6deg)',
+      }} />
+
+      {/* Sparkle dots */}
+      {[[8,14],[85,22],[18,60],[78,68],[50,40],[32,80],[90,52],[65,88],[42,28]].map(([x,y],i) => (
+        <div key={i} style={{
+          position: 'absolute', left: `${x}%`, top: `${y}%`,
+          width: i % 3 === 0 ? 5 : 3, height: i % 3 === 0 ? 5 : 3,
+          borderRadius: '50%',
+          background: `rgba(107,91,164,${0.12 + i * 0.03})`,
+          animation: `twinkle ${3 + i*0.35}s ease-in-out ${i*0.28}s infinite`,
+        }} />
+      ))}
+
+      <style>{`
+        @keyframes floatOrb { 0%,100%{transform:translate(0,0)} 33%{transform:translate(18px,-14px)} 66%{transform:translate(-12px,18px)} }
+        @keyframes twinkle  { 0%,100%{opacity:0.25;transform:scale(1)} 50%{opacity:0.9;transform:scale(2)} }
+      `}</style>
+    </div>
+  );
 }
 
-/* ─── Navbar ─── */
+/* ── Navbar ── */
 function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   useEffect(() => {
-    const fn = () => setScrolled(window.scrollY > 50);
-    window.addEventListener('scroll', fn);
+    const fn = () => setScrolled(window.scrollY > 60);
+    window.addEventListener('scroll', fn, { passive: true });
     return () => window.removeEventListener('scroll', fn);
   }, []);
 
-  const links = [
-    { label: 'Features', href: '#features' },
-    { label: 'How It Works', href: '#process' },
-    { label: 'About', href: '#about' },
-  ];
-
   return (
     <nav style={{
-      position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-      transition: 'all 0.5s cubic-bezier(0.4,0,0.2,1)',
-      background: scrolled ? 'rgba(8,12,20,0.92)' : 'transparent',
-      backdropFilter: scrolled ? 'blur(24px) saturate(180%)' : 'none',
-      borderBottom: scrolled ? `1px solid ${C.slateBorder}` : 'none',
+      position: 'fixed', top: 0, left: 0, right: 0, zIndex: 200,
+      padding: scrolled ? '0' : '10px 20px',
+      transition: 'all 0.4s cubic-bezier(0.4,0,0.2,1)',
     }}>
-      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 68 }}>
-        {/* Logo */}
-        <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none' }}>
-          <div style={{
-            width: 38, height: 38, borderRadius: 10,
-            background: `linear-gradient(135deg, ${C.tealMid}, ${C.tealBright})`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: `0 0 20px rgba(11,181,181,0.4)`,
-            position: 'relative', overflow: 'hidden',
-          }}>
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.12))', borderRadius: 10 }} />
-            <span style={{ color: '#fff', fontWeight: 800, fontSize: 17, fontFamily: 'Space Grotesk, sans-serif', position: 'relative' }}>P</span>
+      <div style={{
+        maxWidth: scrolled ? '100%' : 1160,
+        margin: '0 auto',
+        background: 'rgba(255,255,255,0.75)',
+        backdropFilter: 'blur(28px)',
+        borderRadius: scrolled ? 0 : 16,
+        border: '1px solid rgba(255,255,255,0.88)',
+        boxShadow: '0 4px 32px rgba(107,91,164,0.11)',
+        padding: '0 26px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 62,
+        transition: 'all 0.4s cubic-bezier(0.4,0,0.2,1)',
+      }}>
+        <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 9, textDecoration: 'none' }}>
+          <div style={{ width: 33, height: 33, borderRadius: 9, background: `linear-gradient(135deg, ${C.deep}, ${C.bright})`, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 4px 14px rgba(107,91,164,0.32)` }}>
+            <MdOutlineSchool size={17} color="#fff" />
           </div>
-          <span style={{ color: C.white, fontWeight: 700, fontSize: 18, fontFamily: 'Space Grotesk, sans-serif', letterSpacing: -0.3 }}>
-            Pass<span style={{ color: C.tealBright }}>Gate</span>
-            <span style={{ color: C.slateText, fontWeight: 400 }}> AI</span>
+          <span style={{ fontFamily: "", fontWeight: 800, fontSize: 16.5, color: C.textDark, letterSpacing: -0.3 }}>
+            Pass<span style={{ color: C.mid }}>Gate</span>
+            <span style={{ color: C.textLight, fontWeight: 300, fontSize: 14 }}> AI</span>
           </span>
         </a>
 
-        {/* Desktop links */}
-        <div style={{ display: 'flex', gap: 2, alignItems: 'center' }} className="nav-links-desktop">
-          {links.map(l => (
-            <a key={l.label} href={l.href} style={{
-              color: C.slateLight, padding: '8px 18px', borderRadius: 8,
-              textDecoration: 'none', fontSize: 14, fontFamily: 'DM Sans, sans-serif', fontWeight: 500,
-              transition: 'all 0.2s',
-            }}
-              onMouseEnter={e => { e.target.style.color = C.white; e.target.style.background = C.slateGlass; }}
-              onMouseLeave={e => { e.target.style.color = C.slateLight; e.target.style.background = 'transparent'; }}>
-              {l.label}
+        <div className="nav-desktop" style={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+          {['Features','How It Works','Testimonials','About'].map(l => (
+            <a key={l} href={`#${l.toLowerCase().replace(/ /g,'-')}`}
+              style={{ color: C.textLight, padding: '6px 13px', borderRadius: 8, textDecoration: 'none', fontSize: 13.5, fontFamily: "'DM Sans', sans-serif", fontWeight: 500, transition: 'all 0.2s' }}
+              onMouseEnter={e => { e.currentTarget.style.color = C.textDark; e.currentTarget.style.background = C.superPale; }}
+              onMouseLeave={e => { e.currentTarget.style.color = C.textLight; e.currentTarget.style.background = 'transparent'; }}>
+              {l}
             </a>
           ))}
         </div>
 
-        {/* CTAs */}
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }} className="nav-ctas-desktop">
-          <a href="/student/login" style={{
-            color: C.slateLight, padding: '8px 20px', borderRadius: 8,
-            textDecoration: 'none', fontSize: 14, fontFamily: 'DM Sans, sans-serif', fontWeight: 500,
-            border: `1px solid ${C.slateBorder}`, transition: 'all 0.25s',
-          }}
-            onMouseEnter={e => { e.currentTarget.style.background = C.slateGlass; e.currentTarget.style.color = C.white; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.16)'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = C.slateLight; e.currentTarget.style.borderColor = C.slateBorder; }}>
+        <div className="nav-desktop" style={{ display: 'flex', gap: 9, alignItems: 'center' }}>
+          <a href="/student/login" style={{ color: C.textMid, padding: '7px 17px', borderRadius: 9, textDecoration: 'none', fontSize: 13.5, fontFamily: "'DM Sans', sans-serif", fontWeight: 500, border: `1px solid ${C.border}`, background: 'rgba(255,255,255,0.55)', transition: 'all 0.2s' }}
+            onMouseEnter={e => { e.currentTarget.style.background = C.superPale; e.currentTarget.style.borderColor = C.mid; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.55)'; e.currentTarget.style.borderColor = C.border; }}>
             Sign In
           </a>
-          <a href="/student/signup" style={{
-            background: `linear-gradient(135deg, ${C.tealMid}, ${C.tealBright})`,
-            color: '#fff', padding: '9px 22px', borderRadius: 10,
-            textDecoration: 'none', fontSize: 14, fontFamily: 'DM Sans, sans-serif', fontWeight: 600,
-            boxShadow: `0 4px 20px rgba(11,181,181,0.3)`, transition: 'all 0.28s',
-            position: 'relative', overflow: 'hidden',
-          }}
-            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = `0 8px 30px rgba(11,181,181,0.5)`; }}
-            onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = `0 4px 20px rgba(11,181,181,0.3)`; }}>
-            Get Started →
+          <a href="/student/signup" style={{ background: `linear-gradient(135deg, ${C.mid}, ${C.bright})`, color: '#fff', padding: '8px 19px', borderRadius: 10, textDecoration: 'none', fontSize: 13.5, fontFamily: "'DM Sans', sans-serif", fontWeight: 600, boxShadow: `0 4px 16px rgba(107,91,164,0.30)`, display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.24s' }}
+            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = `0 8px 26px rgba(107,91,164,0.42)`; }}
+            onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = `0 4px 16px rgba(107,91,164,0.30)`; }}>
+            Get Started <FiArrowRight size={12} />
           </a>
         </div>
 
-        {/* Mobile toggle */}
-        <button onClick={() => setOpen(p => !p)} style={{
-          background: C.slateGlass, border: `1px solid ${C.slateBorder}`,
-          borderRadius: 8, width: 38, height: 38, color: C.white, cursor: 'pointer',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }} className="nav-mobile-toggle">
-          {open ? <FiX size={16} /> : <FiMenu size={16} />}
+        <button onClick={() => setOpen(p => !p)} className="nav-mobile" style={{ background: C.superPale, border: `1px solid ${C.border}`, borderRadius: 8, width: 37, height: 37, color: C.textMid, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {open ? <FiX size={15} /> : <FiMenu size={15} />}
         </button>
       </div>
 
-      {/* Mobile menu */}
       {open && (
-        <div style={{ background: 'rgba(8,12,20,0.97)', backdropFilter: 'blur(20px)', padding: '16px 24px 24px', borderTop: `1px solid ${C.slateBorder}` }}>
-          {links.map(l => (
-            <a key={l.label} href={l.href} onClick={() => setOpen(false)} style={{
-              display: 'block', color: C.slateLight, padding: '13px 0',
-              borderBottom: `1px solid ${C.slateBorder}`, textDecoration: 'none',
-              fontFamily: 'DM Sans, sans-serif', fontSize: 15,
-            }}>{l.label}</a>
+        <div style={{ maxWidth: 1160, margin: '7px auto 0', background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(20px)', borderRadius: 14, padding: '14px 22px 18px', border: `1px solid ${C.border}`, boxShadow: '0 4px 24px rgba(107,91,164,0.10)' }}>
+          {['Features','How It Works','Testimonials','About'].map(l => (
+            <a key={l} href={`#${l.toLowerCase().replace(/ /g,'-')}`} onClick={() => setOpen(false)} style={{ display: 'block', color: C.textMid, padding: '11px 0', borderBottom: `1px solid ${C.border}`, textDecoration: 'none', fontFamily: "'DM Sans', sans-serif", fontSize: 14.5 }}>{l}</a>
           ))}
-          <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-            <a href="/student/login" style={{ flex: 1, textAlign: 'center', padding: '11px', borderRadius: 8, border: `1px solid ${C.slateBorder}`, color: C.white, textDecoration: 'none', fontFamily: 'DM Sans, sans-serif', fontSize: 14 }}>Sign In</a>
-            <a href="/student/signup" style={{ flex: 1, textAlign: 'center', padding: '11px', borderRadius: 8, background: `linear-gradient(135deg, ${C.tealMid}, ${C.tealBright})`, color: '#fff', textDecoration: 'none', fontFamily: 'DM Sans, sans-serif', fontSize: 14, fontWeight: 600 }}>Sign Up</a>
+          <div style={{ display: 'flex', gap: 9, marginTop: 13 }}>
+            <a href="/student/login" style={{ flex:1, textAlign:'center', padding:'10px', borderRadius:8, border:`1px solid ${C.border}`, color:C.textMid, textDecoration:'none', fontFamily:"'DM Sans', sans-serif", fontSize:14 }}>Sign In</a>
+            <a href="/student/signup" style={{ flex:1, textAlign:'center', padding:'10px', borderRadius:8, background:`linear-gradient(135deg, ${C.mid}, ${C.bright})`, color:'#fff', textDecoration:'none', fontFamily:"'DM Sans', sans-serif", fontSize:14, fontWeight:600 }}>Sign Up</a>
           </div>
         </div>
       )}
 
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Mono:wght@400;500&display=swap');
-        @media(max-width:768px) { .nav-links-desktop,.nav-ctas-desktop{display:none!important} .nav-mobile-toggle{display:flex!important} }
-        @media(min-width:769px) { .nav-mobile-toggle{display:none!important} }
+        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@300;400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=DM+Mono:wght@400;500&display=swap');
+        @media(max-width:768px){.nav-desktop{display:none!important}.nav-mobile{display:flex!important}}
+        @media(min-width:769px){.nav-mobile{display:none!important}}
       `}</style>
     </nav>
   );
 }
 
-/* ─── Floating Badge ─── */
-function FloatingBadge({ children, style }) {
-  return (
-    <div style={{
-      background: 'rgba(11,181,181,0.08)',
-      border: `1px solid rgba(11,181,181,0.25)`,
-      borderRadius: 100, padding: '7px 20px',
-      display: 'inline-flex', alignItems: 'center', gap: 8,
-      backdropFilter: 'blur(12px)',
-      ...style,
-    }}>
-      {children}
-    </div>
-  );
-}
-
-/* ─── Hero Section ─── */
+/* ── Hero ── */
 function Hero() {
   const [loaded, setLoaded] = useState(false);
-  const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 });
-
+  const [activeSlide, setActiveSlide] = useState(0);
+  useEffect(() => { const t = setTimeout(() => setLoaded(true), 100); return () => clearTimeout(t); }, []);
+  const slides = [
+    { headline: ['Admin','Control'], accent: 'At Glance', sub: 'Comprehensive dashboard with AI risk scoring, color-coded flags, and one-click approval for every outpass request.' },
+    { headline: ['Smart','Outpass'], accent: 'Management', sub: 'Transform hostel outpass workflow with AI consent verification, real-time notifications, and intelligent fraud detection.' },
+    { headline: ['Secure','Parent'], accent: 'Consent', sub: 'Parents receive WhatsApp, voice call, and email alerts with one-tap OTP verification — no app download needed.' },
+  ];
   useEffect(() => {
-    const t = setTimeout(() => setLoaded(true), 80);
-    return () => clearTimeout(t);
+    const t = setInterval(() => setActiveSlide(p => (p+1) % slides.length), 4500);
+    return () => clearInterval(t);
   }, []);
-
-  useEffect(() => {
-    const fn = (e) => setMousePos({ x: e.clientX / window.innerWidth, y: e.clientY / window.innerHeight });
-    window.addEventListener('mousemove', fn);
-    return () => window.removeEventListener('mousemove', fn);
-  }, []);
+  const slide = slides[activeSlide];
 
   return (
-    <section style={{
-      minHeight: '100vh', position: 'relative',
-      background: `linear-gradient(170deg, ${C.inkBlack} 0%, ${C.navyDeep} 50%, #050E1F 100%)`,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      overflow: 'hidden',
-    }}>
-      {/* Dynamic spotlight that follows mouse */}
+    <section style={{ minHeight: '80vh', position: 'relative', display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
       <div style={{
-        position: 'absolute', inset: 0, pointerEvents: 'none',
-        background: `radial-gradient(ellipse 60% 55% at ${mousePos.x * 100}% ${mousePos.y * 100}%, rgba(11,181,181,0.07) 0%, transparent 70%)`,
-        transition: 'background 0.3s ease',
-      }} />
+        position: 'relative', zIndex: 2,
+        display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 52,
+        alignItems: 'center', padding: '118px 46px 78px',
+        maxWidth: 1180, margin: '0 auto', width: '100%',
+      }} className="hero-grid">
 
-      {/* Static glows */}
-      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
-        <div style={{
-          position: 'absolute', top: '5%', right: '8%', width: 560, height: 560, borderRadius: '50%',
-          background: `radial-gradient(circle, rgba(11,181,181,0.10) 0%, transparent 60%)`,
-          animation: 'pulse1 8s ease-in-out infinite',
-        }} />
-        <div style={{
-          position: 'absolute', bottom: '0%', left: '-5%', width: 480, height: 480, borderRadius: '50%',
-          background: `radial-gradient(circle, rgba(232,160,32,0.07) 0%, transparent 65%)`,
-          animation: 'pulse2 11s ease-in-out infinite',
-        }} />
-        <div style={{
-          position: 'absolute', top: '40%', left: '30%', width: 300, height: 300, borderRadius: '50%',
-          background: `radial-gradient(circle, rgba(26,58,107,0.6) 0%, transparent 70%)`,
-          animation: 'pulse3 6s ease-in-out infinite',
-        }} />
+        {/* Left */}
+        <div style={{ opacity: loaded ? 1 : 0, transform: loaded ? 'none' : 'translateY(18px)', transition: 'all 0.8s cubic-bezier(0.22,1,0.36,1)' }}>
+          <h1 key={`h-${activeSlide}`} style={{
+            fontFamily: "", fontWeight: 800,
+            fontSize: 'clamp(50px, 5.8vw, 84px)',
+            lineHeight: 0.94, letterSpacing: -3,
+            color: C.textDark, marginBottom: 8,
+            animation: 'slideUpFade 0.55s cubic-bezier(0.22,1,0.36,1) both',
+          }}>
+            {slide.headline[0]}<br />{slide.headline[1]}
+          </h1>
+          <div key={`a-${activeSlide}`} style={{
+            fontFamily: "", fontWeight: 300,
+            fontSize: 'clamp(32px, 3.8vw, 54px)',
+            color: C.mid, fontStyle: 'italic', letterSpacing: -1,
+            marginBottom: 20, animation: 'slideUpFade 0.55s 0.08s cubic-bezier(0.22,1,0.36,1) both',
+          }}>{slide.accent}</div>
+          <p key={`p-${activeSlide}`} style={{
+            fontSize: 16, lineHeight: 1.88, color: C.textLight,
+            maxWidth: 450, marginBottom: 34,
+            fontFamily: "'DM Sans', sans-serif", fontWeight: 300,
+            animation: 'slideUpFade 0.55s 0.16s cubic-bezier(0.22,1,0.36,1) both',
+          }}>{slide.sub}</p>
 
-        {/* Grid */}
-        <div style={{
-          position: 'absolute', inset: 0,
-          backgroundImage: `linear-gradient(rgba(11,181,181,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(11,181,181,0.04) 1px, transparent 1px)`,
-          backgroundSize: '72px 72px',
-          maskImage: 'radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%)',
-        }} />
+          <div style={{ display: 'flex', gap: 11, flexWrap: 'wrap', marginBottom: 38 }}>
+            <a href="/student/login" style={{
+              display:'inline-flex', alignItems:'center', gap:8, padding:'11px 24px', borderRadius:12,
+              background:C.cardBg, color:C.textDark, fontFamily:"'DM Sans', sans-serif", fontWeight:700, fontSize:13.5,
+              textDecoration:'none', boxShadow:'0 4px 20px rgba(107,91,164,0.13)', border:'1px solid rgba(255,255,255,0.9)',
+              transition:'all 0.26s cubic-bezier(0.22,1,0.36,1)',
+            }}
+              onMouseEnter={e => { e.currentTarget.style.transform='translateY(-3px)'; e.currentTarget.style.boxShadow='0 12px 30px rgba(107,91,164,0.20)'; }}
+              onMouseLeave={e => { e.currentTarget.style.transform='none'; e.currentTarget.style.boxShadow='0 4px 20px rgba(107,91,164,0.13)'; }}>
+              <MdOutlineSchool size={16} style={{ color: C.mid }} /> Student Portal <FiArrowRight size={12} />
+            </a>
+            <a href="/admin/login" style={{
+              display:'inline-flex', alignItems:'center', gap:8, padding:'11px 21px', borderRadius:12,
+              background:`linear-gradient(135deg, ${C.deep}, ${C.bright})`, color:'#fff',
+              fontFamily:"'DM Sans', sans-serif", fontWeight:600, fontSize:13.5,
+              textDecoration:'none', boxShadow:`0 4px 20px rgba(107,91,164,0.36)`,
+              transition:'all 0.26s cubic-bezier(0.22,1,0.36,1)',
+            }}
+              onMouseEnter={e => { e.currentTarget.style.transform='translateY(-3px)'; e.currentTarget.style.boxShadow=`0 12px 30px rgba(107,91,164,0.46)`; }}
+              onMouseLeave={e => { e.currentTarget.style.transform='none'; e.currentTarget.style.boxShadow=`0 4px 20px rgba(107,91,164,0.36)`; }}>
+              <MdOutlineDashboard size={15} /> Admin Dashboard
+            </a>
+          </div>
 
-        {/* Floating orbs */}
-        {[...Array(16)].map((_, i) => (
-          <div key={i} style={{
-            position: 'absolute',
-            left: `${8 + (i * 6.1) % 84}%`,
-            top: `${15 + (i * 11.3) % 70}%`,
-            width: i % 4 === 0 ? 4 : i % 3 === 0 ? 3 : 2,
-            height: i % 4 === 0 ? 4 : i % 3 === 0 ? 3 : 2,
-            borderRadius: '50%',
-            background: i % 3 === 0 ? C.tealBright : i % 2 === 0 ? C.amber : C.navyLight,
-            opacity: 0.6,
-            animation: `orb${(i % 3) + 1} ${5 + (i % 4)}s ease-in-out ${i * 0.35}s infinite alternate`,
-          }} />
-        ))}
-      </div>
-
-      {/* Hero content */}
-      <div style={{ position: 'relative', zIndex: 10, textAlign: 'center', padding: '130px 24px 90px', maxWidth: 920, margin: '0 auto' }}>
-
-        {/* Badge */}
-        <FloatingBadge style={{
-          marginBottom: 44,
-          opacity: loaded ? 1 : 0, transform: loaded ? 'translateY(0)' : 'translateY(-20px)',
-          transition: 'all 0.75s cubic-bezier(0.22,1,0.36,1)',
-        }}>
-          <span style={{ width: 7, height: 7, borderRadius: '50%', background: C.tealBright, display: 'inline-block', boxShadow: `0 0 8px ${C.tealBright}`, animation: 'blink 2s infinite' }} />
-          <span style={{ color: C.tealBright, fontSize: 11, letterSpacing: 3.5, textTransform: 'uppercase', fontFamily: 'DM Mono, monospace', fontWeight: 500 }}>
-            AI-Powered Campus Security
-          </span>
-        </FloatingBadge>
-
-        {/* Headline */}
-        <h1 style={{
-          fontSize: 'clamp(54px, 9.5vw, 104px)', fontWeight: 800,
-          lineHeight: 0.92, letterSpacing: -3,
-          marginBottom: 20, fontFamily: 'Space Grotesk, sans-serif',
-          opacity: loaded ? 1 : 0, transform: loaded ? 'translateY(0)' : 'translateY(28px)',
-          transition: 'all 0.85s 0.1s cubic-bezier(0.22,1,0.36,1)',
-        }}>
-          <span style={{ color: C.white }}>Secure</span>
-          <br />
-          <span style={{
-            background: `linear-gradient(135deg, ${C.tealBright} 0%, ${C.amberLight} 60%, ${C.tealGlow} 100%)`,
-            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-            fontStyle: 'italic', fontWeight: 300,
-          }}>Outpass.</span>
-        </h1>
-
-        <p style={{
-          fontSize: 'clamp(13px, 2vw, 22px)', letterSpacing: 6, textTransform: 'uppercase',
-          color: 'rgba(220,230,255,0.35)', marginBottom: 36,
-          fontFamily: 'DM Mono, monospace', fontWeight: 400,
-          opacity: loaded ? 1 : 0, transition: 'all 0.8s 0.22s cubic-bezier(0.22,1,0.36,1)',
-        }}>Verified. Automated. Intelligent.</p>
-
-        <p style={{
-          fontSize: 16, lineHeight: 2, color: C.slateText,
-          maxWidth: 540, margin: '0 auto 56px', fontFamily: 'DM Sans, sans-serif', fontWeight: 300,
-          opacity: loaded ? 1 : 0, transition: 'all 0.8s 0.34s cubic-bezier(0.22,1,0.36,1)',
-        }}>
-          Transform your hostel outpass workflow with AI-driven parent consent verification, 
-          real-time multi-channel notifications, and intelligent fraud detection that keeps every campus safe.
-        </p>
-
-        {/* CTA buttons */}
-        <div style={{
-          display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 80,
-          opacity: loaded ? 1 : 0, transition: 'all 0.8s 0.46s cubic-bezier(0.22,1,0.36,1)',
-        }}>
-          <GlowBtn href="/student/login" primary>
-            <MdOutlineSchool size={17} /> Student Portal <FiArrowRight size={14} />
-          </GlowBtn>
-          <GlowBtn href="/admin/login">
-            <FiShield size={15} /> Admin Dashboard
-          </GlowBtn>
+          <div style={{ display: 'flex', gap: 7, alignItems: 'center' }}>
+            {slides.map((_,i) => (
+              <button key={i} onClick={() => setActiveSlide(i)} style={{
+                width: i===activeSlide ? 26 : 8, height: 8, borderRadius: 4,
+                background: i===activeSlide ? C.mid : C.pale,
+                border:'none', cursor:'pointer', padding:0,
+                transition:'all 0.3s cubic-bezier(0.22,1,0.36,1)',
+              }} />
+            ))}
+          </div>
         </div>
 
-        {/* Stats row */}
-        <div style={{
-          display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
-          background: 'rgba(255,255,255,0.03)',
-          border: `1px solid ${C.slateBorder}`,
-          borderRadius: 20, overflow: 'hidden', maxWidth: 500, margin: '0 auto',
-          backdropFilter: 'blur(16px)',
-          opacity: loaded ? 1 : 0, transition: 'all 0.8s 0.6s cubic-bezier(0.22,1,0.36,1)',
-        }}>
-          {[
-            { val: 99, suffix: '%', label: 'AI Accuracy' },
-            { val: 2, suffix: 'm', label: 'Avg Approval' },
-            { val: 0, suffix: '', label: 'Manual Errors' },
-          ].map(({ val, suffix, label }, i) => (
-            <div key={label} style={{
-              padding: '26px 16px', textAlign: 'center',
-              borderRight: i < 2 ? `1px solid ${C.slateBorder}` : 'none',
-            }}>
-              <div style={{ fontSize: 36, fontWeight: 800, color: C.tealBright, lineHeight: 1, marginBottom: 5, fontFamily: 'Space Grotesk, sans-serif', textShadow: `0 0 20px rgba(11,181,181,0.4)` }}>
-                <Counter target={val} suffix={suffix} />
+        {/* Right: Dashboard card */}
+        <div style={{ position:'relative', opacity:loaded?1:0, transform:loaded?'none':'translateY(22px)', transition:'all 0.9s 0.22s cubic-bezier(0.22,1,0.36,1)' }}>
+          <div style={{
+            background:'rgba(255,255,255,0.70)', backdropFilter:'blur(30px)',
+            border:'1px solid rgba(255,255,255,0.88)', borderRadius:22, padding:'22px',
+            boxShadow:'0 26px 76px rgba(107,91,164,0.16), 0 4px 16px rgba(0,0,0,0.04)',
+          }}>
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
+              <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                <div style={{ width:27, height:27, borderRadius:7, background:`linear-gradient(135deg, ${C.deep}, ${C.bright})`, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                  <MdOutlineSchool size={14} color="#fff" />
+                </div>
+                <span style={{ fontFamily:"", fontWeight:700, fontSize:12.5, color:C.textDark }}>PassGate <span style={{ color:C.mid }}>AI</span></span>
               </div>
-              <div style={{ fontSize: 10, letterSpacing: 2.5, textTransform: 'uppercase', color: C.slateText, fontFamily: 'DM Mono, monospace' }}>
-                {label}
+              <div style={{ display:'flex' }}>
+                {['#C4B0E0','#A896CE','#8E7EBC'].map((c,i) => (
+                  <div key={i} style={{ width:28, height:28, borderRadius:'50%', background:c, border:'2.5px solid rgba(255,255,255,0.9)', marginLeft:i?-8:0, boxShadow:'0 2px 8px rgba(0,0,0,0.12)' }} />
+                ))}
               </div>
             </div>
-          ))}
-        </div>
-      </div>
 
-      {/* Scroll cue */}
-      <div style={{
-        position: 'absolute', bottom: 30, left: '50%', transform: 'translateX(-50%)',
-        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, animation: 'bounce 2.5s ease-in-out infinite',
-      }}>
-        <div style={{ width: 1, height: 44, background: `linear-gradient(to bottom, ${C.tealBright}, transparent)`, opacity: 0.4 }} />
-        <span style={{ fontSize: 9, letterSpacing: 4, textTransform: 'uppercase', color: C.slateText, fontFamily: 'DM Mono, monospace' }}>scroll</span>
+            <div style={{ background:C.ultraPale, borderRadius:13, padding:'13px 17px', marginBottom:12 }}>
+              <div style={{ display:'flex', alignItems:'baseline', gap:8 }}>
+                <span style={{ fontFamily:"", fontWeight:800, fontSize:32, color:C.textDark, letterSpacing:-1 }}>120</span>
+                <span style={{ fontSize:12.5, color:C.textLight, fontFamily:"'DM Sans', sans-serif" }}>requests today</span>
+              </div>
+            </div>
+
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', background:'#FFFBEF', border:'1px solid #EFE0A0', borderRadius:11, padding:'9px 13px', marginBottom:12 }}>
+              <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                <div style={{ width:23, height:23, borderRadius:6, background:C.accent, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                  <FiActivity size={12} color="#fff" />
+                </div>
+                {/* <span style={{ fontSize:12.5, fontFamily:"'DM Sans', sans-serif", color:'#7A5C00', fontWeight:600 }}>AI Risk Score: Medium</span> */}
+              </div>
+              <span style={{ fontFamily:"'DM Mono', monospace", fontWeight:700, fontSize:19, color:C.textDark }}>5</span>
+            </div>
+
+            {/* Chart */}
+            <div style={{ background:C.ultraPale, borderRadius:13, padding:'11px 13px', marginBottom:12 }}>
+              <svg viewBox="0 0 280 88" style={{ width:'100%', height:88, overflow:'visible' }}>
+                <defs>
+                  <linearGradient id="cg2" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={C.mid} stopOpacity="0.26"/>
+                    <stop offset="100%" stopColor={C.mid} stopOpacity="0.02"/>
+                  </linearGradient>
+                </defs>
+                {[18,40,62].map(y=>(
+                  <line key={y} x1="20" y1={y} x2="280" y2={y} stroke="rgba(107,91,164,0.07)" strokeWidth="1"/>
+                ))}
+                {[['100d',6],['50.0',28],['10.0',50]].map(([l,y])=>(
+                  <text key={l} x="0" y={y+4} fill={C.textDimmed} fontSize="6.5" fontFamily="DM Mono">{l}</text>
+                ))}
+                <path d="M22,68 C42,63 58,56 78,50 S106,42 126,34 S150,20 170,14 S200,11 220,8 S252,5 272,3" fill="none" stroke={C.mid} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M22,68 C42,63 58,56 78,50 S106,42 126,34 S150,20 170,14 S200,11 220,8 S252,5 272,3 V80 H22 Z" fill="url(#cg2)"/>
+                <circle cx="272" cy="3" r="4" fill={C.mid} stroke="white" strokeWidth="2"/>
+                {['Mon','Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((d,i)=>(
+                  <text key={i} x={22+i*36} y={86} fill={C.textDimmed} fontSize="6.5" fontFamily="DM Mono" textAnchor="middle">{d}</text>
+                ))}
+              </svg>
+            </div>
+
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+              <div style={{ display:'flex' }}>
+                {['#9B8DC9','#7C6BB5','#B8ADDA','#6B5BA4'].map((c,i)=>(
+                  <div key={i} style={{ width:26, height:26, borderRadius:'50%', background:c, border:'2px solid #fff', marginLeft:i?-7:0 }} />
+                ))}
+              </div>
+              <div style={{ display:'flex', gap:13, alignItems:'center' }}>
+                <div style={{ display:'flex', alignItems:'center', gap:5 }}>
+                  <div style={{ width:6, height:6, borderRadius:'50%', background:'#7EDBA8', boxShadow:'0 0 6px rgba(126,219,168,0.65)', animation:'pulseDot 2s infinite' }} />
+                  <span style={{ fontSize:10, color:C.textLight, fontFamily:"'DM Mono', monospace" }}>Requests 1A</span>
+                </div>
+                <span style={{ fontSize:10, color:C.textDimmed, fontFamily:"'DM Mono', monospace" }}>30:43 +0</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Floating cards */}
+          {/* <div style={{ position:'absolute', top:-17, left:-22, background:'rgba(255,255,255,0.85)', backdropFilter:'blur(16px)', border:'1px solid rgba(255,255,255,0.92)', borderRadius:13, padding:'9px 13px', boxShadow:'0 8px 26px rgba(107,91,164,0.14)', animation:'floatCard1 5s ease-in-out infinite' }}>
+            <div style={{ fontFamily:"'DM Mono', monospace", fontWeight:700, fontSize:17, color:C.mid }}>98%</div>
+            <div style={{ fontSize:9.5, color:C.textDimmed, fontFamily:"'DM Sans', sans-serif" }}>accuracy</div>
+          </div>
+          <div style={{ position:'absolute', bottom:-15, right:-18, background:'rgba(255,255,255,0.85)', backdropFilter:'blur(16px)', border:'1px solid rgba(255,255,255,0.92)', borderRadius:13, padding:'9px 15px', boxShadow:'0 8px 26px rgba(107,91,164,0.14)', animation:'floatCard2 6s ease-in-out 1.2s infinite' }}>
+            <div style={{ fontFamily:"'DM Mono', monospace", fontWeight:700, fontSize:17, color:C.mid }}>5,000+</div>
+            <div style={{ fontSize:9.5, color:C.textDimmed, fontFamily:"'DM Sans', sans-serif" }}>requests processed</div>
+          </div> */}
+        </div>
       </div>
 
       <style>{`
-        @keyframes pulse1 { 0%,100%{transform:scale(1) translate(0,0)} 50%{transform:scale(1.12) translate(-24px,18px)} }
-        @keyframes pulse2 { 0%,100%{transform:scale(1) translate(0,0)} 50%{transform:scale(1.08) translate(18px,-16px)} }
-        @keyframes pulse3 { 0%,100%{opacity:0.6} 50%{opacity:1} }
-        @keyframes orb1 { from{transform:translateY(0) scale(1);opacity:0.4} to{transform:translateY(-28px) scale(1.5);opacity:0.8} }
-        @keyframes orb2 { from{transform:translateY(0) scale(1);opacity:0.3} to{transform:translateY(-20px) scale(1.3);opacity:0.7} }
-        @keyframes orb3 { from{transform:translateY(0);opacity:0.2} to{transform:translateY(-16px);opacity:0.6} }
-        @keyframes blink { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.4)} }
-        @keyframes bounce { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(10px)} }
+        @keyframes slideUpFade  { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes fadeInUp     { from{opacity:0;transform:translateY(26px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes pulseDot     { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.7)} }
+        @keyframes floatCard1   { 0%,100%{transform:translateY(0) rotate(-1deg)} 50%{transform:translateY(-9px) rotate(0deg)} }
+        @keyframes floatCard2   { 0%,100%{transform:translateY(0) rotate(1deg)} 50%{transform:translateY(-8px) rotate(0deg)} }
+        @keyframes marqueeAnim  { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+        @media(max-width:768px){.hero-grid{grid-template-columns:1fr!important;padding:108px 20px 56px!important;gap:28px!important}}
       `}</style>
     </section>
   );
 }
 
-/* ─── Glow Button ─── */
-function GlowBtn({ href, children, primary }) {
-  const [hov, setHov] = useState(false);
-  return (
-    <a href={href}
-      onMouseEnter={() => setHov(true)}
-      onMouseLeave={() => setHov(false)}
-      style={{
-        display: 'inline-flex', alignItems: 'center', gap: 10,
-        padding: '15px 32px', borderRadius: 14, textDecoration: 'none',
-        fontFamily: 'DM Sans, sans-serif', fontWeight: 600, fontSize: 15,
-        transition: 'all 0.3s cubic-bezier(0.22,1,0.36,1)',
-        ...(primary ? {
-          background: hov
-            ? `linear-gradient(135deg, ${C.tealBright}, #0DD4D4)`
-            : `linear-gradient(135deg, ${C.tealMid}, ${C.tealBright})`,
-          color: '#fff',
-          boxShadow: hov ? `0 12px 40px rgba(11,181,181,0.55), 0 0 0 1px rgba(11,181,181,0.3)` : `0 6px 24px rgba(11,181,181,0.3)`,
-          transform: hov ? 'translateY(-3px) scale(1.02)' : 'none',
-        } : {
-          background: hov ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.04)',
-          color: hov ? C.white : C.slateLight,
-          border: `1px solid ${hov ? 'rgba(255,255,255,0.2)' : C.slateBorder}`,
-          transform: hov ? 'translateY(-3px)' : 'none',
-        }),
-      }}>
-      {children}
-    </a>
-  );
-}
-
-/* ─── Marquee Strip ─── */
+/* ── Marquee ── */
 function Marquee() {
-  const items = ['AI Consent Analysis', 'WhatsApp Alerts', 'OTP Verification', 'Fraud Detection', 'Audit Trails', 'Admin Dashboard', 'Real-Time Approval', 'Zero Manual Errors', 'LangChain AI', 'n8n Automation'];
+  const items = ['AI Consent Analysis','WhatsApp Alerts','OTP Verification','Fraud Detection','Audit Trails','Admin Dashboard','Real-Time Approval','Zero Manual Errors','LangChain AI','n8n Automation'];
   return (
-    <div style={{
-      background: `linear-gradient(90deg, ${C.tealDeep} 0%, ${C.navyMid} 50%, ${C.tealDeep} 100%)`,
-      overflow: 'hidden', padding: '16px 0',
-      borderTop: `1px solid rgba(11,181,181,0.2)`,
-      borderBottom: `1px solid rgba(11,181,181,0.2)`,
-    }}>
-      <div style={{ display: 'flex', animation: 'marquee 22s linear infinite', whiteSpace: 'nowrap' }}>
-        {[...items, ...items].map((item, i) => (
-          <span key={i} style={{
-            display: 'inline-flex', alignItems: 'center', gap: 16, padding: '0 32px',
-            fontSize: 11, letterSpacing: 3.5, textTransform: 'uppercase',
-            color: 'rgba(220,240,255,0.7)', fontFamily: 'DM Mono, monospace', flexShrink: 0,
-          }}>
-            {item} <span style={{ color: C.tealBright, fontSize: 10, textShadow: `0 0 8px ${C.tealBright}` }}>◆</span>
+    <div style={{ background:`linear-gradient(90deg, ${C.deep}, ${C.mid}, ${C.bright}, ${C.mid}, ${C.deep})`, overflow:'hidden', padding:'12px 0', position:'relative', zIndex:2 }}>
+      <div style={{ display:'flex', animation:'marqueeAnim 22s linear infinite', whiteSpace:'nowrap' }}>
+        {[...items,...items].map((item,i)=>(
+          <span key={i} style={{ display:'inline-flex', alignItems:'center', gap:12, padding:'0 22px', fontSize:10.5, letterSpacing:'0.28em', textTransform:'uppercase', color:'rgba(255,255,255,0.75)', fontFamily:"'DM Mono', monospace", flexShrink:0 }}>
+            {item} <span style={{ color:'rgba(255,255,255,0.28)', fontSize:7 }}>◆</span>
           </span>
         ))}
       </div>
-      <style>{`@keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}`}</style>
     </div>
   );
 }
 
-/* ─── Feature Card ─── */
-const featureIcons = [MdAutoAwesome, FiBell, FiShield, FiLock, FiBarChart2, FiEye];
+/* ── Section Header ── */
+function SectionHeader({ label, title, accent, sub, light, center=true }) {
+  const [ref, visible] = useInView(0.1);
+  return (
+    <div ref={ref} style={{ textAlign:center?'center':'left', marginBottom:50 }}>
+      <div style={{ display:'inline-flex', alignItems:'center', gap:8, marginBottom:12 }}>
+        <div style={{ width:18, height:2, background:light?'rgba(255,255,255,0.5)':C.mid, borderRadius:2 }} />
+        <span style={{ fontFamily:"'DM Mono', monospace", fontSize:10, letterSpacing:'0.28em', textTransform:'uppercase', color:light?'rgba(255,255,255,0.65)':C.mid, fontWeight:500 }}>{label}</span>
+        <div style={{ width:18, height:2, background:light?'rgba(255,255,255,0.5)':C.mid, borderRadius:2 }} />
+      </div>
+      <h2 style={{
+        fontFamily:"", fontWeight:800,
+        fontSize:'clamp(30px, 4vw, 52px)',
+        lineHeight:1.06, letterSpacing:-1.5, marginBottom:13,
+        color:light?'#fff':C.textDark,
+        opacity:visible?1:0, transform:visible?'translateY(0)':'translateY(20px)',
+        transition:'all 0.7s cubic-bezier(0.22,1,0.36,1)',
+      }}>
+        {title}{' '}
+        {accent && <span style={{ color:light?'rgba(255,255,255,0.50)':C.mid, fontStyle:'italic', fontWeight:300 }}>{accent}</span>}
+      </h2>
+      {sub && <p style={{ fontSize:15.5, color:light?'rgba(255,255,255,0.62)':C.textLight, fontFamily:"'DM Sans', sans-serif", fontWeight:300, maxWidth:500, margin:center?'0 auto':undefined, lineHeight:1.82, opacity:visible?1:0, transition:'opacity 0.7s 0.15s' }}>{sub}</p>}
+    </div>
+  );
+}
 
-function FeatureCard({ title, desc, index }) {
-  const [hov, setHov] = useState(false);
-  const [ref, visible] = useInView(0.06);
-  const Icon = featureIcons[index % featureIcons.length];
+/* ── Features ── */
+const FEATURES = [
+  { icon: RiBrainLine,        title:'AI Consent Analysis',  desc:'LangChain NLP analyzes parent responses with 95%+ accuracy, detecting genuine consent vs coercion in real time.', num:'01', grad:`linear-gradient(135deg,#9B8DC9,#7C6BB5)` },
+  { icon: RiNotificationLine, title:'Multi-Channel Alerts', desc:'Parents get WhatsApp, automated voice call, and email — all with secure one-time verification links for instant action.', num:'02', grad:`linear-gradient(135deg,#A896CE,#8878BC)` },
+  { icon: RiShieldCheckLine,  title:'Fraud Detection',      desc:'AI risk scoring flags mismatches, suspicious patterns, and fake approvals before they ever reach admin review.', num:'03', grad:`linear-gradient(135deg,#7C6BB5,#6055A0)` },
+  { icon: RiLockPasswordLine, title:'OTP Verification',     desc:'Multi-layer parent auth with time-limited OTPs prevents unauthorized approvals and ensures full request integrity.', num:'04', grad:`linear-gradient(135deg,#9B8DC9,#6B5BA4)` },
+  { icon: RiBarChartBoxLine,  title:'Analytics Dashboard',  desc:'Comprehensive control panel with AI risk indicators, one-click approval workflows, and real-time analytics charts.', num:'05', grad:`linear-gradient(135deg,#B8ADDA,#8E7EBC)` },
+  { icon: RiFileTextLine,     title:'Audit Trails',         desc:'Tamper-proof timestamped logs of every action — submission to final approval — for full regulatory compliance.', num:'06', grad:`linear-gradient(135deg,#7C6BB5,#9B8DC9)` },
+];
 
-  const accentColors = [C.tealBright, C.amber, '#A78BFA', '#34D399', '#60A5FA', '#F472B6'];
-  const accent = accentColors[index % accentColors.length];
+function FeatureCarousel() {
+  const [active, setActive] = useState(0);
+  const total = FEATURES.length;
+  const prev = () => setActive(p=>(p-1+total)%total);
+  const next = () => setActive(p=>(p+1)%total);
+  useEffect(()=>{ const t=setInterval(next,3600); return ()=>clearInterval(t); },[]);
+  const visible3 = [0,1,2].map(i=>FEATURES[(active+i)%total]);
 
   return (
-    <div ref={ref}
-      onMouseEnter={() => setHov(true)}
-      onMouseLeave={() => setHov(false)}
-      style={{
-        background: hov
-          ? `linear-gradient(145deg, rgba(15,25,50,0.9), rgba(10,20,40,0.95))`
-          : `linear-gradient(145deg, rgba(10,18,40,0.8), rgba(8,12,24,0.9))`,
-        border: `1px solid ${hov ? `${accent}40` : C.slateBorder}`,
-        borderRadius: 20, padding: '36px 30px', position: 'relative', overflow: 'hidden',
-        cursor: 'default',
-        transition: 'all 0.45s cubic-bezier(0.22,1,0.36,1)',
-        transform: visible
-          ? (hov ? 'translateY(-8px) scale(1.01)' : 'translateY(0) scale(1)')
-          : 'translateY(36px) scale(0.97)',
-        opacity: visible ? 1 : 0,
-        transitionDelay: `${index * 80}ms`,
-        boxShadow: hov
-          ? `0 24px 60px rgba(0,0,0,0.4), 0 0 0 1px ${accent}20, inset 0 1px 0 rgba(255,255,255,0.06)`
-          : `0 4px 20px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.03)`,
-        backdropFilter: 'blur(16px)',
-      }}>
-
-      {/* Top glow */}
-      <div style={{
-        position: 'absolute', top: 0, left: 0, right: 0, height: 2,
-        background: `linear-gradient(90deg, transparent, ${accent}, transparent)`,
-        opacity: hov ? 1 : 0, transition: 'opacity 0.4s ease', borderRadius: '20px 20px 0 0',
-      }} />
-
-      {/* Background glow orb */}
-      <div style={{
-        position: 'absolute', top: -40, right: -40, width: 160, height: 160, borderRadius: '50%',
-        background: `radial-gradient(circle, ${accent}18 0%, transparent 70%)`,
-        opacity: hov ? 1 : 0.3, transition: 'opacity 0.4s', pointerEvents: 'none',
-      }} />
-
-      {/* Number + Icon row */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 22 }}>
-        <div style={{
-          width: 48, height: 48, borderRadius: 14,
-          background: `${accent}15`,
-          border: `1px solid ${accent}30`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          transition: 'all 0.4s cubic-bezier(0.22,1,0.36,1)',
-          transform: hov ? 'scale(1.1) rotate(-8deg)' : 'none',
-          boxShadow: hov ? `0 0 20px ${accent}30` : 'none',
-        }}>
-          <Icon size={22} style={{ color: accent }} />
+    <section id="features" style={{ padding:'92px 24px', position:'relative', zIndex:2 }}>
+      <div style={{ maxWidth:1200, margin:'0 auto' }}>
+        <SectionHeader label="Platform Features" title="Built for" accent="Every Role" sub="Six purpose-built capabilities that modernize campus outpass management, end-to-end." />
+        <div>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:17, marginBottom:28 }} className="feature-grid">
+            {visible3.map((f,i)=>{
+              const Icon=f.icon; const isCenter=i===1;
+              return (
+                <div key={`${f.num}-${active}`} style={{
+                  background:isCenter?`linear-gradient(145deg,${C.deep},${C.mid})`:'rgba(255,255,255,0.72)',
+                  backdropFilter:'blur(18px)',
+                  border:`1px solid ${isCenter?'transparent':'rgba(255,255,255,0.86)'}`,
+                  borderRadius:20, padding:'32px 26px',
+                  boxShadow:isCenter?`0 20px 54px rgba(107,91,164,0.34)`:'0 4px 18px rgba(107,91,164,0.08)',
+                  transform:isCenter?'scale(1.05) translateY(-10px)':'scale(1)',
+                  transition:'all 0.4s cubic-bezier(0.22,1,0.36,1)',
+                  animation:`fadeInUp 0.5s ${i*0.07}s both`,
+                }}>
+                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:19 }}>
+                    <div style={{ width:46, height:46, borderRadius:13, background:isCenter?'rgba(255,255,255,0.18)':f.grad, border:`1px solid ${isCenter?'rgba(255,255,255,0.25)':'transparent'}`, display:'flex', alignItems:'center', justifyContent:'center', boxShadow:isCenter?'none':'0 4px 14px rgba(107,91,164,0.24)' }}>
+                      <Icon size={21} style={{ color:'#fff' }} />
+                    </div>
+                    <span style={{ fontFamily:"'DM Mono', monospace", fontSize:10.5, color:isCenter?'rgba(255,255,255,0.32)':C.textDimmed, letterSpacing:2 }}>/{f.num}</span>
+                  </div>
+                  <h3 style={{ fontFamily:"", fontWeight:700, fontSize:17.5, color:isCenter?'#fff':C.textDark, marginBottom:8, letterSpacing:-0.2 }}>{f.title}</h3>
+                  <p style={{ fontSize:13.5, lineHeight:1.82, color:isCenter?'rgba(255,255,255,0.67)':C.textLight, fontFamily:"'DM Sans', sans-serif", fontWeight:300 }}>{f.desc}</p>
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:13 }}>
+            <button onClick={prev} style={{ width:40, height:40, borderRadius:'50%', border:`1.5px solid ${C.border}`, background:'rgba(255,255,255,0.70)', backdropFilter:'blur(8px)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:C.textMid, transition:'all 0.2s', boxShadow:'0 2px 10px rgba(107,91,164,0.08)' }}
+              onMouseEnter={e=>{e.currentTarget.style.background=C.superPale;e.currentTarget.style.borderColor=C.mid;}}
+              onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,0.70)';e.currentTarget.style.borderColor=C.border;}}>
+              <FiChevronLeft size={17}/>
+            </button>
+            <div style={{ display:'flex', gap:6 }}>
+              {FEATURES.map((_,i)=>(
+                <button key={i} onClick={()=>setActive(i)} style={{ width:i===active?22:8, height:8, borderRadius:4, background:i===active?C.mid:C.pale, border:'none', cursor:'pointer', padding:0, transition:'all 0.3s cubic-bezier(0.22,1,0.36,1)' }} />
+              ))}
+            </div>
+            <button onClick={next} style={{ width:40, height:40, borderRadius:'50%', border:`1.5px solid ${C.border}`, background:'rgba(255,255,255,0.70)', backdropFilter:'blur(8px)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:C.textMid, transition:'all 0.2s', boxShadow:'0 2px 10px rgba(107,91,164,0.08)' }}
+              onMouseEnter={e=>{e.currentTarget.style.background=C.superPale;e.currentTarget.style.borderColor=C.mid;}}
+              onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,0.70)';e.currentTarget.style.borderColor=C.border;}}>
+              <FiChevronRight size={17}/>
+            </button>
+          </div>
         </div>
-        <span style={{
-          fontFamily: 'DM Mono, monospace', fontSize: 11, letterSpacing: 2,
-          color: `${accent}80`, fontWeight: 500,
-        }}>/{String(index + 1).padStart(2, '0')}</span>
       </div>
-
-      <h3 style={{
-        color: hov ? C.white : C.offWhite, fontSize: 19, fontWeight: 700,
-        marginBottom: 10, fontFamily: 'Space Grotesk, sans-serif', letterSpacing: -0.3,
-        transition: 'color 0.3s',
-      }}>{title}</h3>
-
-      <p style={{
-        color: hov ? 'rgba(220,230,255,0.62)' : 'rgba(220,230,255,0.38)',
-        fontSize: 14, lineHeight: 1.9, fontFamily: 'DM Sans, sans-serif', fontWeight: 300,
-        transition: 'color 0.3s',
-      }}>{desc}</p>
-
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 6, marginTop: 22,
-        opacity: hov ? 1 : 0, transform: hov ? 'translateX(0)' : 'translateX(-10px)',
-        transition: 'all 0.35s ease',
-      }}>
-        <span style={{ fontSize: 12, color: accent, fontFamily: 'DM Sans, sans-serif', fontWeight: 600, letterSpacing: 1 }}>Explore feature</span>
-        <FiArrowRight size={13} style={{ color: accent }} />
-      </div>
-    </div>
+      <style>{`@media(max-width:768px){.feature-grid{grid-template-columns:1fr!important}.feature-grid>div:not(:nth-child(2)){display:none}}`}</style>
+    </section>
   );
 }
 
-/* ─── Section Label ─── */
-function SectionLabel({ children, light }) {
+/* ── Stats Band ── */
+function StatsBand() {
+  const data = [
+    { icon:FiCheckCircle, num:'5,000+', label:'requests processed', grad:`linear-gradient(135deg,#7C6BB5,#9B8DC9)` },
+    { icon:RiShieldCheckLine, num:'98%', label:'accuracy', grad:`linear-gradient(135deg,#6B5BA4,#8878BC)` },
+    { icon:FiUsers, num:'50+', label:'admins using', grad:`linear-gradient(135deg,#9B8DC9,#7C6BB5)` },
+  ];
   return (
-    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
-      <div style={{ width: 24, height: 2, background: light ? C.tealBright : C.tealMid, borderRadius: 2 }} />
-      <span style={{
-        fontSize: 11, letterSpacing: 4.5, textTransform: 'uppercase',
-        color: light ? C.tealBright : C.tealMid,
-        fontFamily: 'DM Mono, monospace', fontWeight: 500,
-      }}>{children}</span>
-    </div>
+    <section style={{ padding:'0 24px 68px', position:'relative', zIndex:2 }}>
+      <div style={{ maxWidth:940, margin:'0 auto', display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:17 }} className="stats-band">
+        {data.map(({icon:Icon,num,label,grad})=>(
+          <div key={label} style={{ background:'rgba(255,255,255,0.72)', backdropFilter:'blur(18px)', border:'1px solid rgba(255,255,255,0.88)', borderRadius:17, padding:'20px 24px', display:'flex', alignItems:'center', gap:14, boxShadow:'0 4px 18px rgba(107,91,164,0.08)' }}>
+            <div style={{ width:44, height:44, borderRadius:12, background:grad, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, boxShadow:'0 4px 14px rgba(107,91,164,0.26)' }}>
+              <Icon size={20} style={{ color:'#fff' }} />
+            </div>
+            <div>
+              <div style={{ fontFamily:"", fontWeight:800, fontSize:22, color:C.textDark, lineHeight:1 }}>{num}</div>
+              <div style={{ fontSize:12, color:C.textLight, fontFamily:"'DM Sans', sans-serif", marginTop:2 }}>{label}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <style>{`@media(max-width:768px){.stats-band{grid-template-columns:1fr!important}}`}</style>
+    </section>
   );
 }
 
-/* ─── Process Step ─── */
-function ProcessStep({ step, title, desc, index, last }) {
-  const [ref, visible] = useInView(0.08);
-  return (
-    <div ref={ref} style={{
-      display: 'flex', gap: 20, alignItems: 'flex-start',
-      opacity: visible ? 1 : 0, transform: visible ? 'translateX(0)' : 'translateX(-28px)',
-      transition: `all 0.65s ${index * 110}ms cubic-bezier(0.22,1,0.36,1)`,
-    }}>
-      <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <div style={{
-          width: 46, height: 46, borderRadius: '50%',
-          background: `linear-gradient(135deg, ${C.tealDeep}, ${C.tealMid})`,
-          border: `2px solid ${C.tealBright}40`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: C.tealBright, fontWeight: 700, fontSize: 13,
-          fontFamily: 'DM Mono, monospace',
-          boxShadow: `0 0 20px rgba(11,181,181,0.2)`,
-        }}>{step}</div>
-        {!last && <div style={{ width: 1, height: 52, background: `linear-gradient(to bottom, ${C.tealBright}40, transparent)`, marginTop: 6 }} />}
-      </div>
-      <div style={{ paddingTop: 12 }}>
-        <h3 style={{ fontWeight: 700, fontSize: 17, color: C.white, marginBottom: 6, fontFamily: 'Space Grotesk, sans-serif', letterSpacing: -0.2 }}>{title}</h3>
-        <p style={{ fontSize: 14, color: C.slateText, lineHeight: 1.75, fontFamily: 'DM Sans, sans-serif', fontWeight: 300 }}>{desc}</p>
-      </div>
-    </div>
-  );
-}
-
-/* ─── Data ─── */
-const features = [
-  { title: 'AI Consent Analysis', desc: 'LangChain analyzes parent responses with 95%+ accuracy, detecting genuine consent vs coercion using NLP-powered context understanding.', },
-  { title: 'Multi-Channel Notifications', desc: 'Parents receive WhatsApp messages, automated voice calls, and email — all with secure one-time verification links for instant action.', },
-  { title: 'Fraud Detection', desc: 'AI risk analysis flags mismatches, suspicious patterns, and fake approvals in real-time before they reach admin review.', },
-  { title: 'OTP Verification', desc: 'Multi-layer parent authentication with time-limited OTPs prevents unauthorized approvals and ensures request integrity.', },
-  { title: 'Admin Dashboard', desc: 'Comprehensive control panel with AI-generated summaries, color-coded risk indicators, and one-click approval workflows.', },
-  { title: 'Audit Trails', desc: 'Tamper-proof, timestamped logs of every action — from submission to final approval — for full regulatory compliance.', },
+/* ── How It Works ── */
+const STEPS = [
+  { num:'01', icon:MdOutlineSchool,       title:'Student Submits Request',  desc:'Fill destination, dates, reason, and parent contact in under 60 seconds through the secure student portal.' },
+  { num:'02', icon:RiNotificationLine,    title:'Parent Gets Notified',      desc:'WhatsApp, voice call, and email delivered instantly with a unique secure approval link — no app needed.' },
+  { num:'03', icon:MdOutlineVerifiedUser, title:'Parent Verifies & Approves',desc:'OTP verification + text/video consent confirms the parent is authentic and acting without coercion.' },
+  { num:'04', icon:RiBrainLine,           title:'AI Analyzes Response',      desc:'LangChain validates consent semantics, date alignment, and flags anomalies for further review.' },
+  { num:'05', icon:MdOutlineDashboard,    title:'Admin Reviews & Decides',   desc:'Dashboard surfaces AI recommendation — approve, flag, or reject — with full context in one view.' },
 ];
 
-const steps = [
-  { step: '01', title: 'Student Submits Request', desc: 'Fill in destination, dates, reason, and parent contact details in under 60 seconds through the secure portal.' },
-  { step: '02', title: 'Parent Gets Notified', desc: 'WhatsApp, voice call, and email delivered instantly with a unique secure approval link — no app needed.' },
-  { step: '03', title: 'Parent Verifies & Approves', desc: 'OTP verification + text/video consent confirms the parent is authentic and acting without coercion.' },
-  { step: '04', title: 'AI Analyzes Response', desc: 'LangChain validates consent semantics, date alignment, and flags anomalies for further review.' },
-  { step: '05', title: 'Admin Reviews & Decides', desc: 'Dashboard surfaces AI recommendation — approve, flag, or reject — with full context in one view.' },
+function HowItWorks() {
+  const [activeStep, setActiveStep] = useState(0);
+  useEffect(()=>{ const t=setInterval(()=>setActiveStep(p=>(p+1)%STEPS.length),3000); return ()=>clearInterval(t); },[]);
+
+  return (
+    <section id="how-it-works" style={{ padding:'92px 24px', background:`linear-gradient(155deg,${C.deep} 0%,${C.mid} 55%,${C.bright} 100%)`, position:'relative', overflow:'hidden', zIndex:2 }}>
+      <div style={{ position:'absolute', top:'-8%', right:'-4%', width:360, height:360, borderRadius:'50%', background:'rgba(255,255,255,0.06)', pointerEvents:'none' }} />
+      <div style={{ position:'absolute', bottom:'-6%', left:'-3%', width:260, height:260, borderRadius:'50%', background:'rgba(255,255,255,0.04)', pointerEvents:'none' }} />
+      <svg style={{ position:'absolute', bottom:0, left:0, width:'100%', opacity:0.14 }} viewBox="0 0 1440 100" preserveAspectRatio="none">
+        <path fill="rgba(255,255,255,0.3)" d="M0,35 C360,90 720,0 1080,55 C1260,82 1380,28 1440,45 L1440,100 L0,100 Z"/>
+      </svg>
+
+      <div style={{ maxWidth:1060, margin:'0 auto', position:'relative', zIndex:1 }}>
+        <SectionHeader label="How It Works" title="Request to" accent="Approval in Minutes" light center={false} sub="A seamless five-step flow from submission to verified approval — with AI validation at every checkpoint." />
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:52, alignItems:'start' }} className="process-grid">
+          <div style={{ display:'flex', flexDirection:'column', gap:3 }}>
+            {STEPS.map((s,i)=>{
+              const Icon=s.icon;
+              return (
+                <div key={i} onClick={()=>setActiveStep(i)} style={{ display:'flex', gap:13, alignItems:'flex-start', padding:'13px 15px', borderRadius:13, cursor:'pointer', background:i===activeStep?'rgba(255,255,255,0.15)':'transparent', border:`1px solid ${i===activeStep?'rgba(255,255,255,0.24)':'transparent'}`, transition:'all 0.28s cubic-bezier(0.22,1,0.36,1)' }}>
+                  <div style={{ width:37, height:37, borderRadius:'50%', flexShrink:0, background:i===activeStep?'#fff':'rgba(255,255,255,0.14)', border:`1.5px solid ${i===activeStep?'#fff':'rgba(255,255,255,0.24)'}`, display:'flex', alignItems:'center', justifyContent:'center', color:i===activeStep?C.deep:'rgba(255,255,255,0.70)', transition:'all 0.28s', boxShadow:i===activeStep?'0 4px 14px rgba(0,0,0,0.12)':'none' }}>
+                    <Icon size={15}/>
+                  </div>
+                  <div style={{ paddingTop:5 }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:7, marginBottom:2 }}>
+                      <span style={{ fontFamily:"'DM Mono', monospace", fontSize:9.5, color:i===activeStep?'rgba(255,255,255,0.52)':'rgba(255,255,255,0.32)', letterSpacing:1 }}>{s.num}</span>
+                      <h4 style={{ fontFamily:"", fontWeight:700, fontSize:14.5, color:i===activeStep?'#fff':'rgba(255,255,255,0.60)', margin:0, transition:'color 0.28s' }}>{s.title}</h4>
+                    </div>
+                    {i===activeStep && (
+                      <p style={{ fontSize:12.5, color:'rgba(255,255,255,0.60)', fontFamily:"'DM Sans', sans-serif", fontWeight:300, lineHeight:1.7, margin:0, animation:'fadeInUp 0.3s both' }}>{s.desc}</p>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div style={{ background:'rgba(255,255,255,0.11)', border:'1px solid rgba(255,255,255,0.20)', borderRadius:20, padding:'26px 24px', backdropFilter:'blur(16px)' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:19 }}>
+              <div style={{ width:7, height:7, borderRadius:'50%', background:'#7EDBA8', boxShadow:'0 0 8px rgba(126,219,168,0.7)', animation:'pulseDot 2s infinite' }} />
+              <span style={{ fontFamily:"'DM Mono', monospace", fontSize:9.5, color:'rgba(255,255,255,0.50)', letterSpacing:'0.24em', textTransform:'uppercase' }}>Live System Metrics</span>
+            </div>
+            {[['Requests Processed Today','247','#fff'],['Avg Response Time','1m 42s','rgba(255,255,255,0.88)'],['Parent Satisfaction','98.4%','#7EDBA8'],['AI Accuracy Rate','99.1%','#7EDBA8']].map(([l,v,vc])=>(
+              <div key={l} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'10px 0', borderBottom:'1px solid rgba(255,255,255,0.08)' }}>
+                <span style={{ color:'rgba(255,255,255,0.50)', fontSize:12.5, fontFamily:"'DM Sans', sans-serif" }}>{l}</span>
+                <span style={{ color:vc, fontWeight:700, fontSize:14.5, fontFamily:"'DM Mono', monospace" }}>{v}</span>
+              </div>
+            ))}
+            <div style={{ marginTop:17, padding:'12px', borderRadius:10, background:'rgba(255,255,255,0.08)', display:'flex', alignItems:'center', gap:8 }}>
+              <FiZap size={14} style={{ color:'rgba(255,255,255,0.62)', flexShrink:0 }}/>
+              <span style={{ fontSize:11.5, color:'rgba(255,255,255,0.50)', fontFamily:"'DM Sans', sans-serif", lineHeight:1.5 }}>
+                Step <strong style={{ color:'#fff' }}>{STEPS[activeStep].num}</strong> — {STEPS[activeStep].title}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <style>{`@media(max-width:768px){.process-grid{grid-template-columns:1fr!important;gap:28px!important}}`}</style>
+    </section>
+  );
+}
+
+/* ── Testimonials ── */
+const TESTIMONIALS = [
+  { name:'Priya Sharma',     role:'Hostel Warden, NIT Delhi',    text:'PassGate AI has completely transformed how we manage outpass requests. What used to take hours now takes minutes. The AI consent verification is remarkably accurate.', rating:5, initials:'PS' },
+  { name:'Dr. Rajesh Kumar', role:'Dean of Students, IIT Bombay',text:'The fraud detection alone has saved us from dozens of fake approvals. Parents love the WhatsApp notifications. Implementation was seamless.', rating:5, initials:'RK' },
+  { name:'Ananya Iyer',      role:'Student, VIT Vellore',        text:'Submitting an outpass used to be a 2-day ordeal. Now my parents get notified instantly and approve in minutes. Completely stress-free.', rating:5, initials:'AI' },
+  { name:'Vikram Nair',      role:'Admin Officer, BITS Pilani',  text:"The audit trail feature is excellent for compliance. The dashboard gives us a bird's eye view of everything in real time.", rating:5, initials:'VN' },
+  { name:'Meera Patel',      role:'Parent, RVCE Bangalore',      text:"Incredibly easy. I get a WhatsApp message, click the link, enter OTP, and I'm done. No apps, no complications whatsoever.", rating:5, initials:'MP' },
 ];
 
-/* ─── Main ─── */
+function TestimonialsCarousel() {
+  const [active, setActive] = useState(0);
+  const [autoplay, setAutoplay] = useState(true);
+  const total = TESTIMONIALS.length;
+  useEffect(()=>{ if(!autoplay) return; const t=setInterval(()=>setActive(p=>(p+1)%total),4000); return ()=>clearInterval(t); },[autoplay]);
+  const prev=()=>{setAutoplay(false);setActive(p=>(p-1+total)%total);};
+  const next=()=>{setAutoplay(false);setActive(p=>(p+1)%total);};
+  const cards=[-1,0,1].map(i=>({...TESTIMONIALS[(active+i+total)%total],offset:i}));
+
+  return (
+    <section id="testimonials" style={{ padding:'92px 24px', position:'relative', zIndex:2, overflow:'hidden' }}>
+      <div style={{ maxWidth:1060, margin:'0 auto' }}>
+        <SectionHeader label="Testimonials" title="Loved by" accent="Every Campus" sub="Hear from wardens, admins, students, and parents who use PassGate AI every day." />
+        <div style={{ position:'relative', height:305, display:'flex', alignItems:'center', justifyContent:'center', marginBottom:34 }}>
+          {cards.map(({name,role,text,rating,initials,offset})=>(
+            <div key={`${name}-${active}`} style={{
+              position:'absolute', width:offset===0?460:345,
+              background:offset===0?`linear-gradient(145deg,${C.deep},${C.mid})`:'rgba(255,255,255,0.72)',
+              backdropFilter:'blur(18px)',
+              border:`1px solid ${offset===0?'transparent':'rgba(255,255,255,0.86)'}`,
+              borderRadius:20, padding:offset===0?'28px 26px':'20px 20px',
+              boxShadow:offset===0?`0 22px 58px rgba(107,91,164,0.33)`:'0 4px 18px rgba(107,91,164,0.08)',
+              transform:`translateX(${offset*65}%) scale(${offset===0?1:0.87})`,
+              opacity:offset===0?1:0.46, zIndex:offset===0?2:1,
+              transition:'all 0.44s cubic-bezier(0.22,1,0.36,1)',
+              cursor:offset!==0?'pointer':'default',
+            }} onClick={()=>offset!==0&&setActive((active+offset+total)%total)}>
+              <div style={{ display:'flex', gap:3, marginBottom:11 }}>
+                {Array(rating).fill(null).map((_,i)=>(
+                  <FiStar key={i} size={12} style={{ color:offset===0?'rgba(255,255,255,0.82)':C.accent, fill:offset===0?'rgba(255,255,255,0.82)':C.accent }} />
+                ))}
+              </div>
+              <p style={{ fontSize:offset===0?14:12.5, color:offset===0?'rgba(255,255,255,0.80)':C.textLight, fontFamily:"'DM Sans', sans-serif", fontWeight:300, lineHeight:1.78, marginBottom:17, fontStyle:'italic' }}>"{text}"</p>
+              <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                <div style={{ width:35, height:35, borderRadius:'50%', flexShrink:0, background:offset===0?'rgba(255,255,255,0.18)':C.superPale, border:`1.5px solid ${offset===0?'rgba(255,255,255,0.28)':C.border}`, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:"'DM Mono', monospace", fontSize:10.5, fontWeight:600, color:offset===0?'#fff':C.mid }}>{initials}</div>
+                <div>
+                  <p style={{ fontFamily:"", fontWeight:700, fontSize:13, color:offset===0?'#fff':C.textDark, marginBottom:1 }}>{name}</p>
+                  <p style={{ fontSize:10.5, color:offset===0?'rgba(255,255,255,0.46)':C.textDimmed, fontFamily:"'DM Sans', sans-serif" }}>{role}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:13 }}>
+          <button onClick={prev} style={{ width:40, height:40, borderRadius:'50%', border:`1.5px solid ${C.border}`, background:'rgba(255,255,255,0.70)', backdropFilter:'blur(8px)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:C.textMid, transition:'all 0.2s' }}
+            onMouseEnter={e=>{e.currentTarget.style.borderColor=C.mid;e.currentTarget.style.background=C.superPale;}}
+            onMouseLeave={e=>{e.currentTarget.style.borderColor=C.border;e.currentTarget.style.background='rgba(255,255,255,0.70)';}}>
+            <FiChevronLeft size={17}/>
+          </button>
+          <div style={{ display:'flex', gap:6 }}>
+            {TESTIMONIALS.map((_,i)=>(
+              <button key={i} onClick={()=>{setAutoplay(false);setActive(i);}} style={{ width:i===active?22:8, height:8, borderRadius:4, background:i===active?C.mid:C.pale, border:'none', cursor:'pointer', padding:0, transition:'all 0.3s cubic-bezier(0.22,1,0.36,1)' }} />
+            ))}
+          </div>
+          <button onClick={next} style={{ width:40, height:40, borderRadius:'50%', border:`1.5px solid ${C.border}`, background:'rgba(255,255,255,0.70)', backdropFilter:'blur(8px)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:C.textMid, transition:'all 0.2s' }}
+            onMouseEnter={e=>{e.currentTarget.style.borderColor=C.mid;e.currentTarget.style.background=C.superPale;}}
+            onMouseLeave={e=>{e.currentTarget.style.borderColor=C.border;e.currentTarget.style.background='rgba(255,255,255,0.70)';}}>
+            <FiChevronRight size={17}/>
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ── CTA ── */
+function CTASection() {
+  const [ref, visible] = useInView(0.1);
+  return (
+    <section id="about" style={{ padding:'106px 24px', background:`linear-gradient(155deg,${C.deep} 0%,${C.mid} 55%,${C.bright} 100%)`, position:'relative', overflow:'hidden', zIndex:2 }}>
+      <div style={{ position:'absolute', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width:540, height:540, borderRadius:'50%', border:'1px solid rgba(255,255,255,0.07)', pointerEvents:'none' }} />
+      <div style={{ position:'absolute', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width:820, height:820, borderRadius:'50%', border:'1px solid rgba(255,255,255,0.04)', pointerEvents:'none' }} />
+      <svg style={{ position:'absolute', top:0, left:0, width:'100%', opacity:0.11 }} viewBox="0 0 1440 90" preserveAspectRatio="none">
+        <path fill="rgba(255,255,255,0.3)" d="M0,28 C360,75 720,0 1080,46 C1260,70 1380,18 1440,36 L1440,0 L0,0 Z"/>
+      </svg>
+      <div ref={ref} style={{ maxWidth:640, margin:'0 auto', textAlign:'center', position:'relative', zIndex:1, opacity:visible?1:0, transform:visible?'translateY(0)':'translateY(26px)', transition:'all 0.85s cubic-bezier(0.22,1,0.36,1)' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:10, justifyContent:'center', marginBottom:26 }}>
+          <div style={{ height:1, width:48, background:'linear-gradient(90deg, transparent, rgba(255,255,255,0.4))' }} />
+          <HiOutlineSparkles size={16} style={{ color:'rgba(255,255,255,0.72)' }} />
+          <div style={{ height:1, width:48, background:'linear-gradient(90deg, rgba(255,255,255,0.4), transparent)' }} />
+        </div>
+        <h2 style={{ fontFamily:"", fontWeight:800, fontSize:'clamp(32px, 4.8vw, 58px)', lineHeight:1.03, letterSpacing:-2, color:'#fff', marginBottom:15 }}>
+          Ready to Digitize<br />
+          <span style={{ color:'rgba(255,255,255,0.50)', fontStyle:'italic', fontWeight:300 }}>Your Campus?</span>
+        </h2>
+        <p style={{ fontSize:15.5, color:'rgba(255,255,255,0.64)', lineHeight:1.9, marginBottom:42, fontFamily:"'DM Sans', sans-serif", fontWeight:300 }}>
+          Join forward-thinking institutions replacing paper-based outpass systems with AI-powered, fraud-resistant automation.
+        </p>
+        <div style={{ display:'flex', gap:11, justifyContent:'center', flexWrap:'wrap', marginBottom:38 }}>
+          <a href="/student/signup" style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'13px 30px', borderRadius:12, background:'#FFFFFF', color:C.deep, fontFamily:"'DM Sans', sans-serif", fontWeight:700, fontSize:14, textDecoration:'none', boxShadow:'0 6px 22px rgba(0,0,0,0.12)', transition:'all 0.26s' }}
+            onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-3px)';e.currentTarget.style.boxShadow='0 14px 34px rgba(0,0,0,0.18)';}}
+            onMouseLeave={e=>{e.currentTarget.style.transform='none';e.currentTarget.style.boxShadow='0 6px 22px rgba(0,0,0,0.12)';}}>
+            Get Started Free <FiArrowRight size={13}/>
+          </a>
+          <a href="/admin/login" style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'12px 24px', borderRadius:12, border:'1.5px solid rgba(255,255,255,0.30)', color:'#fff', fontFamily:"'DM Sans', sans-serif", fontWeight:600, fontSize:14, textDecoration:'none', background:'rgba(255,255,255,0.11)', transition:'all 0.26s' }}
+            onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.20)';e.currentTarget.style.transform='translateY(-3px)';}}
+            onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,0.11)';e.currentTarget.style.transform='none';}}>
+            <RiShieldCheckLine size={15}/> Admin Portal
+          </a>
+        </div>
+        <div style={{ display:'flex', alignItems:'center', gap:10, justifyContent:'center' }}>
+          <div style={{ display:'flex' }}>
+            {['PS','RK','AI','VN','MP'].map((init,i)=>(
+              <div key={i} style={{ width:29, height:29, borderRadius:'50%', background:'rgba(255,255,255,0.20)', border:'2px solid rgba(255,255,255,0.35)', marginLeft:i?-7:0, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:"'DM Mono', monospace", fontSize:9, fontWeight:600, color:'#fff' }}>{init}</div>
+            ))}
+          </div>
+          <span style={{ fontSize:12.5, color:'rgba(255,255,255,0.64)', fontFamily:"'DM Sans', sans-serif" }}>
+            Trusted by <strong style={{ color:'#fff' }}>500+</strong> students across campuses
+          </span>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ── Footer ── */
+function Footer() {
+  return (
+    <footer style={{ background:C.deep, padding:'38px 30px', borderTop:'1px solid rgba(255,255,255,0.09)', position:'relative', zIndex:2 }}>
+      <div style={{ maxWidth:1240, margin:'0 auto', display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:16 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:9 }}>
+          <div style={{ width:29, height:29, borderRadius:8, background:'rgba(255,255,255,0.18)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <MdOutlineSchool size={15} color="#fff"/>
+          </div>
+          <span style={{ fontFamily:"", fontWeight:800, fontSize:16, color:'#fff', letterSpacing:-0.2 }}>
+            Pass<span style={{ color:'rgba(255,255,255,0.50)' }}>Gate</span>
+            <span style={{ color:'rgba(255,255,255,0.28)', fontWeight:300 }}> AI</span>
+          </span>
+        </div>
+        <div style={{ display:'flex', gap:20, flexWrap:'wrap' }}>
+          {['Features','How It Works','Admin Portal','Student Login'].map(l=>(
+            <a key={l} href="#" style={{ color:'rgba(255,255,255,0.40)', textDecoration:'none', fontSize:12.5, fontFamily:"'DM Sans', sans-serif", transition:'color 0.18s' }}
+              onMouseEnter={e=>e.currentTarget.style.color='#fff'}
+              onMouseLeave={e=>e.currentTarget.style.color='rgba(255,255,255,0.40)'}>{l}</a>
+          ))}
+        </div>
+        <span style={{ fontSize:10.5, letterSpacing:'0.08em', color:'rgba(255,255,255,0.18)', fontFamily:"'DM Mono', monospace" }}>
+          © 2025 PassGate AI · MERN + LangChain + n8n
+        </span>
+      </div>
+    </footer>
+  );
+}
+
+/* ── Main ── */
 export default function LandingPage() {
-  const [featRef, featVisible] = useInView(0.04);
-  const [processRef, processVisible] = useInView(0.04);
-  const [ctaRef, ctaVisible] = useInView(0.08);
-
   return (
-    <div style={{ fontFamily: 'DM Sans, sans-serif', background: C.inkBlack, color: C.white, overflowX: 'hidden', minHeight: '100vh' }}>
+    <div style={{ fontFamily:"'DM Sans', sans-serif", color:C.textDark, overflowX:'hidden', minHeight:'100vh', position:'relative' }}>
+      <PageBackground />
       <Navbar />
       <Hero />
       <Marquee />
-
-      {/* ─── Features ─── */}
-      <section id="features" style={{ padding: '120px 24px', background: `linear-gradient(180deg, ${C.inkBlack} 0%, ${C.navyDeep} 100%)`, position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: '20%', left: '50%', transform: 'translateX(-50%)', width: 800, height: 800, borderRadius: '50%', background: `radial-gradient(circle, rgba(11,181,181,0.04) 0%, transparent 65%)`, pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', inset: 0, backgroundImage: `radial-gradient(circle, rgba(11,181,181,0.06) 1px, transparent 1px)`, backgroundSize: '40px 40px', opacity: 0.4, pointerEvents: 'none' }} />
-
-        <div ref={featRef} style={{ maxWidth: 1240, margin: '0 auto', position: 'relative' }}>
-          <div style={{ textAlign: 'center', marginBottom: 80 }}>
-            <SectionLabel light>Platform Features</SectionLabel>
-            <h2 style={{
-              fontSize: 'clamp(38px, 5.5vw, 64px)', fontWeight: 800, color: C.white,
-              letterSpacing: -2, lineHeight: 1.05, marginBottom: 18,
-              fontFamily: 'Space Grotesk, sans-serif',
-              opacity: featVisible ? 1 : 0, transform: featVisible ? 'translateY(0)' : 'translateY(28px)',
-              transition: 'all 0.75s cubic-bezier(0.22,1,0.36,1)',
-            }}>
-              Built for{' '}
-              <span style={{ color: C.tealBright, fontStyle: 'italic', textShadow: `0 0 40px rgba(11,181,181,0.4)` }}>Every</span>
-              {' '}Role
-            </h2>
-            <p style={{
-              fontSize: 16, color: C.slateText, fontFamily: 'DM Sans, sans-serif', fontWeight: 300,
-              maxWidth: 460, margin: '0 auto',
-              opacity: featVisible ? 1 : 0, transition: 'all 0.75s 0.15s cubic-bezier(0.22,1,0.36,1)',
-            }}>
-              Six purpose-built capabilities that modernize campus outpass management, end-to-end.
-            </p>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 18 }}>
-            {features.map((f, i) => <FeatureCard key={i} {...f} index={i} />)}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── How It Works ─── */}
-      <section id="process" style={{ padding: '110px 24px', background: C.navyDeep, position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: `linear-gradient(90deg, transparent, ${C.tealBright}30, transparent)` }} />
-        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 1, background: `linear-gradient(90deg, transparent, ${C.tealBright}20, transparent)` }} />
-
-        <div ref={processRef} style={{ maxWidth: 1140, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 80, alignItems: 'start' }}>
-          {/* Left column */}
-          <div style={{
-            opacity: processVisible ? 1 : 0, transform: processVisible ? 'translateX(0)' : 'translateX(-36px)',
-            transition: 'all 0.75s cubic-bezier(0.22,1,0.36,1)',
-          }}>
-            <SectionLabel light>How It Works</SectionLabel>
-            <h2 style={{ fontSize: 'clamp(36px, 4.5vw, 58px)', fontWeight: 800, color: C.white, letterSpacing: -2, lineHeight: 1.05, marginBottom: 22, fontFamily: 'Space Grotesk, sans-serif' }}>
-              Request to<br />
-              <span style={{ color: C.tealBright, textShadow: `0 0 30px rgba(11,181,181,0.35)` }}>Approval</span>
-              <span style={{ color: C.slateText, fontWeight: 300, fontStyle: 'italic' }}> in minutes.</span>
-            </h2>
-            <p style={{ fontSize: 15, lineHeight: 1.9, color: C.slateText, fontFamily: 'DM Sans, sans-serif', fontWeight: 300, maxWidth: 380, marginBottom: 44 }}>
-              A seamless five-step flow from submission to verified approval — with AI validation at every checkpoint.
-            </p>
-
-            {/* Live stats card */}
-            <div style={{
-              background: `linear-gradient(145deg, rgba(13,79,79,0.4), rgba(10,118,118,0.2))`,
-              border: `1px solid rgba(11,181,181,0.2)`,
-              borderRadius: 18, padding: '28px 30px',
-              backdropFilter: 'blur(20px)',
-              boxShadow: `0 20px 60px rgba(0,0,0,0.3), inset 0 1px 0 rgba(11,181,181,0.1)`,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-                <span style={{ width: 9, height: 9, borderRadius: '50%', background: C.tealBright, display: 'inline-block', animation: 'blink 2s infinite', boxShadow: `0 0 10px ${C.tealBright}` }} />
-                <span style={{ color: C.slateText, fontSize: 11, letterSpacing: 3.5, textTransform: 'uppercase', fontFamily: 'DM Mono, monospace' }}>Live System Metrics</span>
-              </div>
-              {[
-                { label: 'Requests Processed Today', val: '247', color: C.amberLight },
-                { label: 'Avg Response Time', val: '1m 42s', color: C.tealBright },
-                { label: 'Parent Satisfaction Score', val: '98.4%', color: '#34D399' },
-                { label: 'AI Accuracy Rate', val: '99.1%', color: '#A78BFA' },
-              ].map(({ label, val, color }) => (
-                <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '11px 0', borderBottom: `1px solid rgba(255,255,255,0.06)` }}>
-                  <span style={{ color: C.slateText, fontSize: 13, fontFamily: 'DM Sans, sans-serif' }}>{label}</span>
-                  <span style={{ color, fontWeight: 700, fontSize: 15, fontFamily: 'DM Mono, monospace', textShadow: `0 0 12px ${color}60` }}>{val}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Steps */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 12 }}>
-            {steps.map((s, i) => <ProcessStep key={i} {...s} index={i} last={i === steps.length - 1} />)}
-          </div>
-        </div>
-        <style>{`@media(max-width:768px){#process>div{grid-template-columns:1fr!important;gap:52px!important}}`}</style>
-      </section>
-
-      {/* ─── Trust Band ─── */}
-      <section style={{ background: C.inkBlack, padding: '64px 24px', borderTop: `1px solid ${C.slateBorder}`, borderBottom: `1px solid ${C.slateBorder}` }}>
-        <div style={{ maxWidth: 960, margin: '0 auto', textAlign: 'center' }}>
-          <p style={{ fontSize: 11, letterSpacing: 5, textTransform: 'uppercase', color: C.slateText, fontFamily: 'DM Mono, monospace', marginBottom: 36 }}>Powered By</p>
-          <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
-            {['MERN Stack', 'LangChain AI', 'n8n Automation', 'WhatsApp API', 'OTP Auth', 'Face Matching'].map(t => (
-              <div key={t} style={{
-                padding: '10px 22px', borderRadius: 100,
-                background: `rgba(11,181,181,0.06)`,
-                border: `1px solid rgba(11,181,181,0.18)`,
-                color: C.tealBright, fontSize: 12,
-                fontFamily: 'DM Mono, monospace', fontWeight: 500,
-                letterSpacing: 0.5,
-                transition: 'all 0.25s',
-              }}
-                onMouseEnter={e => { e.currentTarget.style.background = `rgba(11,181,181,0.14)`; e.currentTarget.style.borderColor = `rgba(11,181,181,0.4)`; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = `rgba(11,181,181,0.06)`; e.currentTarget.style.borderColor = `rgba(11,181,181,0.18)`; e.currentTarget.style.transform = 'none'; }}
-              >{t}</div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── CTA ─── */}
-      <section id="about" style={{ padding: '130px 24px', background: `linear-gradient(180deg, ${C.inkBlack} 0%, ${C.navyDeep} 50%, ${C.inkBlack} 100%)`, position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(ellipse 70% 60% at 50% 50%, rgba(11,181,181,0.05) 0%, transparent 65%)`, pointerEvents: 'none' }} />
-        {/* Decorative rings */}
-        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 600, height: 600, borderRadius: '50%', border: `1px solid rgba(11,181,181,0.06)`, pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 900, height: 900, borderRadius: '50%', border: `1px solid rgba(11,181,181,0.04)`, pointerEvents: 'none' }} />
-
-        <div ref={ctaRef} style={{
-          maxWidth: 720, margin: '0 auto', textAlign: 'center', position: 'relative',
-          opacity: ctaVisible ? 1 : 0, transform: ctaVisible ? 'translateY(0)' : 'translateY(36px)',
-          transition: 'all 0.85s cubic-bezier(0.22,1,0.36,1)',
-        }}>
-          {/* Decorative line ornament */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, justifyContent: 'center', marginBottom: 36 }}>
-            <div style={{ height: 1, width: 80, background: `linear-gradient(90deg, transparent, ${C.tealBright}60)` }} />
-            <HiOutlineSparkles size={18} style={{ color: C.tealBright, filter: `drop-shadow(0 0 6px ${C.tealBright})` }} />
-            <div style={{ height: 1, width: 80, background: `linear-gradient(90deg, ${C.tealBright}60, transparent)` }} />
-          </div>
-
-          <h2 style={{
-            fontSize: 'clamp(38px, 5.5vw, 68px)', fontWeight: 800, color: C.white,
-            letterSpacing: -2.5, lineHeight: 1.0, marginBottom: 22,
-            fontFamily: 'Space Grotesk, sans-serif',
-          }}>
-            Ready to Digitize<br />
-            <span style={{ color: C.tealBright, textShadow: `0 0 40px rgba(11,181,181,0.5)`, fontStyle: 'italic', fontWeight: 300 }}>Your Campus?</span>
-          </h2>
-          <p style={{ fontSize: 16, lineHeight: 1.95, color: C.slateText, marginBottom: 52, fontFamily: 'DM Sans, sans-serif', fontWeight: 300 }}>
-            Join forward-thinking institutions replacing paper-based outpass systems with AI-powered, fraud-resistant automation. Students, parents, and admins — all in one seamless loop.
-          </p>
-          <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <a href="/student/signup" style={{
-              display: 'inline-flex', alignItems: 'center', gap: 10,
-              padding: '17px 40px', borderRadius: 14,
-              background: `linear-gradient(135deg, ${C.tealMid}, ${C.tealBright})`,
-              color: '#fff', textDecoration: 'none',
-              fontFamily: 'DM Sans, sans-serif', fontWeight: 700, fontSize: 15,
-              boxShadow: `0 8px 30px rgba(11,181,181,0.35)`, transition: 'all 0.3s',
-              letterSpacing: 0.3,
-            }}
-              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px) scale(1.02)'; e.currentTarget.style.boxShadow = `0 16px 44px rgba(11,181,181,0.5)`; }}
-              onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = `0 8px 30px rgba(11,181,181,0.35)`; }}>
-              Get Started Free <FiArrowRight size={16} />
-            </a>
-            <a href="/admin/login" style={{
-              display: 'inline-flex', alignItems: 'center', gap: 10,
-              padding: '16px 36px', borderRadius: 14,
-              border: `1px solid rgba(11,181,181,0.25)`,
-              color: C.tealBright, textDecoration: 'none',
-              fontFamily: 'DM Sans, sans-serif', fontWeight: 600, fontSize: 15,
-              transition: 'all 0.3s',
-            }}
-              onMouseEnter={e => { e.currentTarget.style.background = `rgba(11,181,181,0.08)`; e.currentTarget.style.borderColor = `rgba(11,181,181,0.5)`; e.currentTarget.style.transform = 'translateY(-3px)'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = `rgba(11,181,181,0.25)`; e.currentTarget.style.transform = 'none'; }}>
-              <FiShield size={16} /> Admin Portal
-            </a>
-          </div>
-
-          {/* Social proof micro-strip */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'center', marginTop: 48 }}>
-            <div style={{ display: 'flex' }}>
-              {['#0FB5B5', '#34D399', '#60A5FA', '#A78BFA', '#F472B6'].map((c, i) => (
-                <div key={i} style={{ width: 28, height: 28, borderRadius: '50%', background: `${c}30`, border: `2px solid ${c}60`, marginLeft: i ? -8 : 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <FiCheckCircle size={11} style={{ color: c }} />
-                </div>
-              ))}
-            </div>
-            <span style={{ fontSize: 13, color: C.slateText, fontFamily: 'DM Sans, sans-serif' }}>
-              Trusted by <strong style={{ color: C.white }}>500+</strong> students across campuses
-            </span>
-          </div>
-        </div>
-      </section>
-
-      {/* ─── Footer ─── */}
-      <footer style={{
-        background: C.inkBlack,
-        borderTop: `1px solid ${C.slateBorder}`,
-        padding: '44px 32px',
-      }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 28, height: 28, borderRadius: 7, background: `linear-gradient(135deg, ${C.tealMid}, ${C.tealBright})`, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 0 14px rgba(11,181,181,0.35)` }}>
-              <span style={{ color: '#fff', fontWeight: 800, fontSize: 13, fontFamily: 'Space Grotesk, sans-serif' }}>P</span>
-            </div>
-            <span style={{ color: C.offWhite, fontWeight: 700, fontSize: 17, fontFamily: 'Space Grotesk, sans-serif', letterSpacing: -0.3 }}>
-              Pass<span style={{ color: C.tealBright }}>Gate</span> <span style={{ color: C.slateText, fontWeight: 300 }}>AI</span>
-            </span>
-          </div>
-          <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
-            {['Features', 'How It Works', 'Admin Portal', 'Student Login'].map(l => (
-              <a key={l} href="#" style={{ color: C.slateText, textDecoration: 'none', fontSize: 13, fontFamily: 'DM Sans, sans-serif', transition: 'color 0.2s' }}
-                onMouseEnter={e => e.target.style.color = C.white}
-                onMouseLeave={e => e.target.style.color = C.slateText}>{l}</a>
-            ))}
-          </div>
-          <span style={{ fontSize: 11, letterSpacing: 1.5, color: 'rgba(255,255,255,0.15)', fontFamily: 'DM Mono, monospace' }}>
-            © 2025 PassGate AI · MERN + LangChain + n8n
-          </span>
-        </div>
-      </footer>
+      <FeatureCarousel />
+      <StatsBand />
+      <HowItWorks />
+      <TestimonialsCarousel />
+      <CTASection />
+      <Footer />
     </div>
   );
 }

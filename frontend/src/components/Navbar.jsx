@@ -10,8 +10,8 @@ import { useAuth } from '../context/AuthContext';
 const C = {
   inkBlack:    '#080C14',
   navyDeep:    '#0A1628',
-  tealMid:     '#0A7C7C',
-  tealBright:  '#0FB5B5',
+  magentaMid:     '#8E2A7A',
+  magentaBright:  '#A23B88',
   amber:       '#E8A020',
   amberLight:  '#F5BE58',
   slateBorder: 'rgba(255,255,255,0.08)',
@@ -44,7 +44,7 @@ const AdminSidebar = () => {
         @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
         * { box-sizing: border-box; }
         .admin-sb-link { transition: all 0.2s cubic-bezier(0.22,1,0.36,1); text-decoration: none; }
-        .admin-sb-link:hover:not(.admin-sb-active) { background: rgba(11,181,181,0.07) !important; color: #F0F6FF !important; }
+        .admin-sb-link:hover:not(.admin-sb-active) { background: rgba(162,59,136,0.07) !important; color: #F0F6FF !important; }
         .admin-logout:hover { background: rgba(248,113,113,0.1) !important; color: #f87171 !important; }
         .admin-settings:hover { background: rgba(255,255,255,0.06) !important; color: #F0F6FF !important; }
         @keyframes adminPulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
@@ -53,12 +53,12 @@ const AdminSidebar = () => {
       {/* Logo */}
       <div style={{ padding:'22px 20px 18px', borderBottom:`1px solid rgba(232,160,32,0.1)` }}>
         <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-          <div style={{ width:40, height:40, background:`linear-gradient(135deg, ${C.tealMid}, ${C.tealBright})`, borderRadius:11, display:'flex', alignItems:'center', justifyContent:'center', boxShadow:`0 0 20px rgba(11,181,181,0.35)`, flexShrink:0 }}>
+          <div style={{ width:40, height:40, background:`linear-gradient(135deg, #8E2A7A, #A23B88)`, borderRadius:11, display:'flex', alignItems:'center', justifyContent:'center', boxShadow:`0 0 20px rgba(162,59,136,0.35)`, flexShrink:0 }}>
             <FiShield size={19} color="#fff"/>
           </div>
           <div>
             <p style={{ color:C.white, fontWeight:700, fontSize:17, fontFamily:'Space Grotesk, sans-serif', letterSpacing:-0.3, lineHeight:1 }}>
-              Pass<span style={{ color:C.tealBright }}>Gate</span> AI
+              Pass<span style={{ color:'#A23B88' }}>Gate</span> AI
             </p>
             <p style={{ color:'rgba(220,230,255,0.25)', fontSize:9, fontFamily:'DM Mono, monospace', letterSpacing:'0.2em', textTransform:'uppercase', marginTop:3 }}>Admin Console</p>
           </div>
@@ -88,10 +88,10 @@ const AdminSidebar = () => {
             style={({ isActive }) => ({
               display:'flex', alignItems:'center', gap:11, padding:'11px 12px', borderRadius:12,
               marginBottom:3, fontSize:13, fontWeight: isActive ? 600 : 400,
-              background: isActive ? `linear-gradient(135deg, ${C.tealMid}, ${C.tealBright})` : 'transparent',
+              background: isActive ? `linear-gradient(135deg, #8E2A7A, #A23B88)` : 'transparent',
               color: isActive ? '#fff' : 'rgba(220,230,255,0.4)',
-              boxShadow: isActive ? `0 4px 16px rgba(11,181,181,0.28)` : 'none',
-            })}>
+              boxShadow: isActive ? `0 4px 16px rgba(162,59,136,0.28)` : 'none',
+            })}
             {({ isActive }) => (
               <>
                 <span style={{ width:28, height:28, borderRadius:8, background: isActive ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.05)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, transition:'background 0.2s' }}>
@@ -112,8 +112,8 @@ const AdminSidebar = () => {
       <div style={{ height:1, margin:'0 14px', background:'rgba(255,255,255,0.05)' }}/>
 
       {/* AI Status */}
-      <div style={{ margin:'10px 14px', padding:'10px 13px', background:'rgba(11,181,181,0.06)', border:'1px solid rgba(11,181,181,0.15)', borderRadius:12, display:'flex', alignItems:'center', gap:9 }}>
-        <HiOutlineSparkles size={14} style={{ color:C.tealBright, flexShrink:0 }}/>
+      <div style={{ margin:'10px 14px', padding:'10px 13px', background:'rgba(162,59,136,0.06)', border:'1px solid rgba(162,59,136,0.15)', borderRadius:12, display:'flex', alignItems:'center', gap:9 }}>
+        <HiOutlineSparkles size={14} style={{ color:'#A23B88', flexShrink:0 }}/>
         <div style={{ flex:1 }}>
           <p style={{ fontSize:11, fontWeight:600, color:C.white, fontFamily:'DM Sans, sans-serif', lineHeight:1 }}>AI Engine</p>
           <p style={{ fontSize:9, color:'#34D399', fontFamily:'DM Mono, monospace', marginTop:2 }}>Active & Running</p>

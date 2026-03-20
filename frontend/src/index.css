@@ -5,23 +5,21 @@
 
 /* ─── Design Tokens ─────────────────────────────────────── */
 :root {
-  --burgundy: #6D1B34;
-  --burgundy-deep: #4A0F23;
-  --burgundy-mid: #8B2342;
-  --burgundy-light: #B8445E;
-  --cream: #F7EDD8;
-  --cream-warm: #FFF8EE;
-  --cream-deep: #EDD9B0;
-  --cream-dark: #D4B896;
-  --gold: #C8943A;
-  --gold-light: #E8B85C;
-  --gold-pale: #F5DFA8;
-  --text-dark: #1A0A10;
-  --text-mid: #4A2030;
-  --text-soft: #9B6070;
-  --shadow-burgundy: 0 8px 32px rgba(109, 27, 52, 0.25);
-  --shadow-card: 0 2px 20px rgba(109, 27, 52, 0.07), 0 1px 4px rgba(109, 27, 52, 0.04);
-  --shadow-elevated: 0 12px 48px rgba(109, 27, 52, 0.15), 0 4px 16px rgba(109, 27, 52, 0.08);
+  --magenta: #A23B88;
+  --magenta-deep: #8E2A7A;
+  --magenta-dark: #7B1E6D;
+  --magenta-light: #C45AA3;
+  --white: #FFFFFF;
+  --white-warm: #F9F7FF;
+  --white-alt: #F3F0FF;
+  --white-deep: #EDEBFF;
+  --text-dark: #1F2937;
+  --text-mid: #374151;
+  --text-soft: #6B7280;
+  --shadow-magenta: 0 8px 32px rgba(162, 59, 136, 0.25);
+  --shadow-card: 0 4px 20px rgba(162, 59, 136, 0.12), 0 2px 8px rgba(162, 59, 136, 0.06);
+  --shadow-elevated: 0 12px 48px rgba(162, 59, 136, 0.18), 0 4px 16px rgba(162, 59, 136, 0.1);
+  --shadow-glow: 0 0 20px rgba(162, 59, 136, 0.4);
 }
 
 /* ─── Base Reset ─────────────────────────────────────────── */
@@ -35,16 +33,16 @@ html {
 
 body {
   font-family: 'Outfit', sans-serif;
-  background: var(--cream-warm);
+  background: var(--white-warm);
   color: var(--text-dark);
   overflow-x: hidden;
 }
 
 /* ─── Custom Scrollbar ───────────────────────────────────── */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: var(--cream-warm); }
-::-webkit-scrollbar-thumb { background: linear-gradient(180deg, var(--burgundy-light), var(--burgundy)); border-radius: 10px; }
-::-webkit-scrollbar-thumb:hover { background: var(--burgundy); }
+::-webkit-scrollbar-track { background: var(--white-warm); }
+::-webkit-scrollbar-thumb { background: linear-gradient(180deg, var(--magenta-light), var(--magenta)); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--magenta); }
 
 /* ─── Cursor ─────────────────────────────────────────────── */
 * { cursor: default; }
