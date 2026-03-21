@@ -158,8 +158,8 @@ function Navbar() {
             <MdOutlineSchool size={17} color="#fff" />
           </div>
           <span style={{ fontFamily: "", fontWeight: 800, fontSize: 16.5, color: C.textDark, letterSpacing: -0.3 }}>
-            Pass<span style={{ color: C.mid }}>Gate</span>
-            <span style={{ color: C.textLight, fontWeight: 300, fontSize: 14 }}> AI</span>
+            <span style={{ color: C.mid }}>Passify</span>
+            {/* <span style={{ color: C.textLight, fontWeight: 300, fontSize: 14 }}> AI</span> */}
           </span>
         </a>
 
@@ -310,7 +310,7 @@ function Hero() {
                 <div style={{ width:27, height:27, borderRadius:7, background:`linear-gradient(135deg, ${C.deep}, ${C.bright})`, display:'flex', alignItems:'center', justifyContent:'center' }}>
                   <MdOutlineSchool size={14} color="#fff" />
                 </div>
-                <span style={{ fontFamily:"", fontWeight:700, fontSize:12.5, color:C.textDark }}>PassGate <span style={{ color:C.mid }}>AI</span></span>
+                <span style={{ fontFamily:"", fontWeight:700, fontSize:12.5, color:C.textDark }}>Passify <span style={{ color:C.mid }}>AI</span></span>
               </div>
               <div style={{ display:'flex' }}>
                 {['#C4B0E0','#A896CE','#8E7EBC'].map((c,i) => (
@@ -616,7 +616,7 @@ function HowItWorks() {
 
 /* ── Testimonials ── */
 const TESTIMONIALS = [
-  { name:'Priya Sharma',     role:'Hostel Warden, NIT Delhi',    text:'PassGate AI has completely transformed how we manage outpass requests. What used to take hours now takes minutes. The AI consent verification is remarkably accurate.', rating:5, initials:'PS' },
+  { name:'Priya Sharma',     role:'Hostel Warden, NIT Delhi',    text:'Passify AI has completely transformed how we manage outpass requests. What used to take hours now takes minutes. The AI consent verification is remarkably accurate.', rating:5, initials:'PS' },
   { name:'Dr. Rajesh Kumar', role:'Dean of Students, IIT Bombay',text:'The fraud detection alone has saved us from dozens of fake approvals. Parents love the WhatsApp notifications. Implementation was seamless.', rating:5, initials:'RK' },
   { name:'Ananya Iyer',      role:'Student, VIT Vellore',        text:'Submitting an outpass used to be a 2-day ordeal. Now my parents get notified instantly and approve in minutes. Completely stress-free.', rating:5, initials:'AI' },
   { name:'Vikram Nair',      role:'Admin Officer, BITS Pilani',  text:"The audit trail feature is excellent for compliance. The dashboard gives us a bird's eye view of everything in real time.", rating:5, initials:'VN' },
@@ -635,7 +635,7 @@ function TestimonialsCarousel() {
   return (
     <section id="testimonials" style={{ padding:'92px 24px', position:'relative', zIndex:2, overflow:'hidden' }}>
       <div style={{ maxWidth:1060, margin:'0 auto' }}>
-        <SectionHeader label="Testimonials" title="Loved by" accent="Every Campus" sub="Hear from wardens, admins, students, and parents who use PassGate AI every day." />
+        <SectionHeader label="Testimonials" title="Loved by" accent="Every Campus" sub="Hear from wardens, admins, students, and parents who use Passify AI every day." />
         <div style={{ position:'relative', height:305, display:'flex', alignItems:'center', justifyContent:'center', marginBottom:34 }}>
           {cards.map(({name,role,text,rating,initials,offset})=>(
             <div key={`${name}-${active}`} style={{
@@ -748,8 +748,8 @@ function Footer() {
             <MdOutlineSchool size={15} color="#fff"/>
           </div>
           <span style={{ fontFamily:"", fontWeight:800, fontSize:16, color:'#fff', letterSpacing:-0.2 }}>
-            Pass<span style={{ color:'rgba(255,255,255,0.50)' }}>Gate</span>
-            <span style={{ color:'rgba(255,255,255,0.28)', fontWeight:300 }}> AI</span>
+            <span style={{ color:'rgba(255,255,255,0.50)' }}>Passify</span>
+            {/* <span style={{ color:'rgba(255,255,255,0.28)', fontWeight:300 }}> AI</span> */}
           </span>
         </div>
         <div style={{ display:'flex', gap:20, flexWrap:'wrap' }}>
@@ -760,7 +760,7 @@ function Footer() {
           ))}
         </div>
         <span style={{ fontSize:10.5, letterSpacing:'0.08em', color:'rgba(255,255,255,0.18)', fontFamily:"'DM Mono', monospace" }}>
-          © 2025 PassGate AI · MERN + LangChain + n8n
+          © 2025 Passify AI · MERN + LangChain + n8n
         </span>
       </div>
     </footer>
