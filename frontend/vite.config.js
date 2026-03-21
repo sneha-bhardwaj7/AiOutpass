@@ -8,10 +8,11 @@ export default defineConfig({
 
   server: {
     proxy: {
-      // All /api/* requests are forwarded to Express
+      // ALL /api/* requests → Express backend on port 5000
       "/api": {
-        target: "http://localhost:5000",
+        target:      "http://localhost:5000",
         changeOrigin: true,
+        secure:       false,
       },
     },
   },

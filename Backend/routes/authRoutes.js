@@ -1,4 +1,9 @@
 // backend/routes/authRoutes.js
+//
+// ── FIX: Added GET /students route so AdminParents can list ALL registered
+//         students (not just ones who submitted an outpass).
+// ─────────────────────────────────────────────────────────────────────────────
+
 const express = require("express");
 const multer  = require("multer");
 const {
@@ -11,13 +16,12 @@ const {
   changeAdminPassword,
   updateStudentProfile,
   changeStudentPassword,
+  getAllStudents,           // ← NEW
 } = require("../controllers/authController");
-const protect = require("../middleware/authMiddleware");
+const protect        = require("../middleware/authMiddleware");
+const authorizeRoles = require("../middleware/roleMiddleware");
 
-// ── Use memoryStorage so the file.buffer is available for Cloudinary
-//    (no files are written to disk)
 const upload = multer({ storage: multer.memoryStorage() });
-
 const router = express.Router();
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
@@ -30,6 +34,16 @@ router.post("/admin/login",    loginUser);
 
 // ── Profile ───────────────────────────────────────────────────────────────────
 router.get("/profile", protect, getProfile);
+
+// ── NEW: Admin fetches ALL registered students ────────────────────────────────
+// Used by AdminParents page to populate the student selector dropdown.
+// Returns every User with role="student" — no outpass required.
+router.get(
+  "/students",
+  protect,
+  authorizeRoles("admin"),
+  getAllStudents
+);
 
 // ── Student profile / password ────────────────────────────────────────────────
 router.put("/student/profile",         protect, upload.single("avatar"), updateStudentProfile);

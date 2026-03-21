@@ -8,7 +8,7 @@ import StudentLayout from '../components/StudentLayout';
 import { useAuth } from '../context/AuthContext';
 import { T, GCSS } from '../components/Pagebackground';   // ← capital B fixed
 
-const BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+const BASE_URL = import.meta.env.REACT_VITE_APP_BACKEND_URL || 'http://localhost:5000';
 const CARD = { background:'rgba(255,255,255,0.62)', backdropFilter:'blur(28px)', border:'1px solid rgba(255,255,255,0.86)', borderRadius:20, overflow:'hidden', boxShadow:'0 8px 32px rgba(91,74,155,0.12)' };
 
 function Field({ label, icon: Icon, type='text', value, onChange, placeholder }) {

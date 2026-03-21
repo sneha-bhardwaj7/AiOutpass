@@ -93,15 +93,15 @@ function Sidebar({type='admin'}){
       </nav>
 
       {/* AI status */}
-      <div style={{margin:'0 14px 10px',padding:'10px 13px',background:'rgba(255,255,255,0.09)',border:'1px solid rgba(255,255,255,0.15)',borderRadius:12,display:'flex',alignItems:'center',gap:9}}>
+      {/* <div style={{margin:'0 14px 10px',padding:'10px 13px',background:'rgba(255,255,255,0.09)',border:'1px solid rgba(255,255,255,0.15)',borderRadius:12,display:'flex',alignItems:'center',gap:9}}>
         <div style={{width:7,height:7,borderRadius:'50%',background:'#7EDBA8',animation:'dotPulse 2.2s ease-in-out infinite',boxShadow:'0 0 8px rgba(126,219,168,0.70)',flexShrink:0}}/>
         <span style={{fontSize:10,color:'rgba(255,255,255,0.55)',letterSpacing:'0.08em'}}>AI Engine Active</span>
-      </div>
+      </div> */}
 
       {/* Bottom */}
       <div style={{padding:'6px 10px 18px',borderTop:`1px solid ${T.sideBd}`}}>
         {[
-          {icon:FiSettings,label:'Settings',onClick:()=>{}},
+          // {icon:FiSettings,label:'Settings',onClick:()=>{}},
           {icon:FiLogOut,  label:'Logout',  onClick:()=>{logout?.();navigate(logoutPath);}},
         ].map(({icon:Icon,label,onClick})=>(
           <button key={label} onClick={onClick} className="sb-btn" style={{width:'100%',display:'flex',alignItems:'center',gap:10,padding:'9px 11px',borderRadius:13,border:'none',background:'transparent',color:'rgba(255,255,255,0.44)',fontSize:13,cursor:'pointer',marginBottom:2}}>

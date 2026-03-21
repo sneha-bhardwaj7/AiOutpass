@@ -39,7 +39,7 @@ const StudentLayout = ({ children }) => {
 
       {/* ── Sidebar ── */}
       <aside style={{
-        width: 248, flexShrink: 0, position: 'fixed', height: '100%', zIndex: 30,
+        width: 265, flexShrink: 0, position: 'fixed', height: '100%', zIndex: 30,
         display: 'flex', flexDirection: 'column', overflow: 'hidden',
         background: `linear-gradient(180deg,${T.sideTop} 0%,${T.sideBg} 45%,${T.mid} 100%)`,
         borderRight: `1px solid ${T.sideBd}`,
@@ -55,15 +55,15 @@ const StudentLayout = ({ children }) => {
         {/* Logo */}
         <div style={{ padding:'22px 20px 18px', borderBottom:`1px solid ${T.sideBd}`, position:'relative' }}>
           <div style={{ display:'flex', alignItems:'center', gap:11 }}>
-            <div style={{ width:40, height:40, borderRadius:12, flexShrink:0, background:'rgba(255,255,255,0.18)', border:'1.5px solid rgba(255,255,255,0.26)', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 3px 14px rgba(0,0,0,0.10)' }}>
+            {/* <div style={{ width:40, height:40, borderRadius:12, flexShrink:0, background:'rgba(255,255,255,0.18)', border:'1.5px solid rgba(255,255,255,0.26)', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 3px 14px rgba(0,0,0,0.10)' }}>
               <MdOutlineSchool style={{ color:'#fff', fontSize:20 }}/>
-            </div>
+            </div> */}
             <div>
-              <p style={{ fontWeight:800, fontSize:17, color:'#fff', letterSpacing:-0.4, lineHeight:1 }}>
+              {/* <p style={{ fontWeight:800, fontSize:17, color:'#fff', letterSpacing:-0.4, lineHeight:1 }}>
                 Pass<span style={{ color:'rgba(255,255,255,0.52)' }}>Gate</span>
                 <span style={{ fontWeight:300, color:'rgba(255,255,255,0.38)', fontSize:14 }}> AI</span>
-              </p>
-              <p style={{ fontSize:9, color:'rgba(255,255,255,0.34)', letterSpacing:'0.20em', textTransform:'uppercase', marginTop:2 }}>Student Portal</p>
+              </p> */}
+              <p style={{ fontSize:12, color:'rgba(255,255,255,0.34)', letterSpacing:'0.20em', textTransform:'uppercase', marginTop:2 }}>Student Portal</p>
             </div>
           </div>
         </div>
@@ -99,11 +99,7 @@ const StudentLayout = ({ children }) => {
           ))}
         </nav>
 
-        {/* AI engine status */}
-        <div style={{ margin:'0 14px 10px', padding:'10px 13px', background:'rgba(255,255,255,0.09)', border:'1px solid rgba(255,255,255,0.15)', borderRadius:12, display:'flex', alignItems:'center', gap:9 }}>
-          <div style={{ width:7, height:7, borderRadius:'50%', background:'#7EDBA8', animation:'dotPulse 2.2s ease-in-out infinite', boxShadow:'0 0 8px rgba(126,219,168,0.70)', flexShrink:0 }}/>
-          <span style={{ fontSize:10, color:'rgba(255,255,255,0.55)', letterSpacing:'0.08em' }}>AI Engine Active</span>
-        </div>
+        
 
         {/* Logout */}
         <div style={{ padding:'6px 10px 18px', borderTop:`1px solid ${T.sideBd}` }}>

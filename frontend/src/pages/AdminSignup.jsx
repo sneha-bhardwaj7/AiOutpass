@@ -56,7 +56,7 @@ export default function AdminSignup(){
     if(!canSubmit||loading)return;
     setLoading(true);setError('');
     try{
-      const res=await fetch('http://localhost:5000/api/auth/admin/signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:form.name.trim(),email:form.email.trim().toLowerCase(),password:form.password})});
+      const res=await fetch(`${import.meta.env.REACT_VITE_APP_BACKEND_URL}/api/auth/admin/signup`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:form.name.trim(),email:form.email.trim().toLowerCase(),password:form.password})});
       const data=await res.json();
       if(!res.ok)throw new Error(data.message||'Signup failed');
       localStorage.setItem('token',data.token);
@@ -72,15 +72,7 @@ export default function AdminSignup(){
 
       <div style={{width:'100%',maxWidth:460,position:'relative',zIndex:1,opacity:mounted?1:0,transform:mounted?'none':'translateY(16px)',transition:'all 0.6s cubic-bezier(0.22,1,0.36,1)'}}>
 
-        {/* Logo */}
-        {/* <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:10,marginBottom:22}}>
-          <div style={{width:40,height:40,borderRadius:12,background:`linear-gradient(135deg,${T.deep},${T.bright})`,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:`0 5px 18px rgba(91,74,155,0.40)`}}>
-            <MdOutlineSchool size={20} color="#fff"/>
-          </div>
-          <span style={{fontWeight:800,fontSize:21,color:T.ink,letterSpacing:-0.5}}>
-            Pass<span style={{color:T.mid}}>Gate</span><span style={{fontWeight:300,color:T.inkSoft,fontSize:15}}> AI</span>
-          </span>
-        </div> */}
+        
 
         {/* Glass card */}
         <div style={{background:T.glass,backdropFilter:'blur(36px)',border:`1px solid ${T.glassBd}`,borderRadius:26,boxShadow:T.glassSh,padding:'40px 36px',position:'relative',overflow:'hidden'}}>

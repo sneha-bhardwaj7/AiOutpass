@@ -1,96 +1,91 @@
 // src/context/AuthContext.jsx
 //
-// Key additions vs original:
-//  1. updateUser(partialData) — merges changed fields into state + localStorage
-//     WITHOUT touching token/role. Use this in profile save handlers so
-//     updated data persists across logout.
-//  2. On mount: reads localStorage synchronously (no flash), then re-fetches
-//     GET /api/auth/profile to pick up latest avatar/fields from DB.
-//  3. login() normalises _id vs id so both API shapes work.
+// ── FIX: Added updateUser() ───────────────────────────────────────────────────
+//  ERROR: "updateUser is not a function"
+//  CAUSE: AuthContext only exposed { user, role, token, loading, login, logout }
+//         — updateUser was missing, so AdminProfile & StudentProfile crashed
+//         when clicking Save Changes.
+//
+//  updateUser(fields) merges only the changed fields into:
+//    1. React state        → UI reflects new values instantly
+//    2. localStorage "user"→ survives page reload (profile no longer disappears)
+//  Token and role are NEVER touched — safe to call after any profile PUT.
+// ─────────────────────────────────────────────────────────────────────────────
 
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useCallback } from "react";
 
 const AuthContext = createContext(null);
 
-const BASE = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
-
 export const AuthProvider = ({ children }) => {
-
-  // ── Synchronous initialisation — no blank flash on refresh ─────────────────
-  const [user,    setUser]    = useState(() => {
-    try { return JSON.parse(localStorage.getItem("user") || "null"); }
-    catch { return null; }
-  });
-  const [role,    setRole]    = useState(() => localStorage.getItem("role")  || null);
-  const [token,   setToken]   = useState(() => localStorage.getItem("token") || null);
+  const [user,    setUser]    = useState(null);
+  const [role,    setRole]    = useState(null);   // 'student' | 'admin'
+  const [token,   setToken]   = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // ── Re-fetch profile from DB on mount so latest data is always current ──────
+  // ── Boot: rehydrate from localStorage ────────────────────────────────────────
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
-    if (!storedToken) { setLoading(false); return; }
-
-    fetch(`${BASE}/api/auth/profile`, {
-      headers: { Authorization: `Bearer ${storedToken}` },
-    })
-      .then(res => {
-        if (!res.ok) throw new Error("Token invalid");
-        return res.json();
-      })
-      .then(freshUser => {
-        const stored = (() => {
-          try { return JSON.parse(localStorage.getItem("user") || "{}"); }
-          catch { return {}; }
-        })();
-        const merged = { ...stored, ...freshUser, _id: freshUser._id || freshUser.id };
-        setUser(merged);
-        setRole(merged.role);
-        localStorage.setItem("user", JSON.stringify(merged));
-        localStorage.setItem("role", merged.role);
-      })
-      .catch(_clear)               // expired / invalid token → log out
-      .finally(() => setLoading(false));
+    const storedUser  = localStorage.getItem("user");
+    const storedRole  = localStorage.getItem("role");
+    if (storedToken && storedUser) {
+      try {
+        setToken(storedToken);
+        setUser(JSON.parse(storedUser));
+        setRole(storedRole);
+      } catch {
+        // Corrupted JSON — wipe and force re-login
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        localStorage.removeItem("role");
+      }
+    }
+    setLoading(false);
   }, []);
 
-  // ── _clear: wipe all auth state + storage ──────────────────────────────────
-  function _clear() {
-    setUser(null); setRole(null); setToken(null);
+  // ── login ─────────────────────────────────────────────────────────────────────
+  const login = useCallback((userData, userRole, authToken) => {
+    setUser(userData);
+    setRole(userRole);
+    setToken(authToken);
+    localStorage.setItem("token", authToken);
+    localStorage.setItem("user",  JSON.stringify(userData));
+    localStorage.setItem("role",  userRole);
+  }, []);
+
+  // ── updateUser ────────────────────────────────────────────────────────────────
+  // THE FIX: this was the missing function causing "updateUser is not a function"
+  // Usage: updateUser(data.admin)  or  updateUser(data.student)
+  // Effect: merges new fields into state + localStorage without touching token
+  const updateUser = useCallback((updatedFields) => {
+    setUser(prev => {
+      const merged = { ...prev, ...updatedFields };
+      localStorage.setItem("user", JSON.stringify(merged));
+      return merged;
+    });
+  }, []);
+
+  // ── logout ────────────────────────────────────────────────────────────────────
+  const logout = useCallback(() => {
+    setUser(null);
+    setRole(null);
+    setToken(null);
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     localStorage.removeItem("role");
-  }
-
-  // ── login(): called after signup / login API response ──────────────────────
-  const login = (userData, userRole, authToken) => {
-    const normalised = { ...userData, _id: userData._id || userData.id };
-    const r = userRole  || normalised.role;
-    const t = authToken || token;
-    setUser(normalised); setRole(r); setToken(t);
-    localStorage.setItem("user",  JSON.stringify(normalised));
-    localStorage.setItem("role",  r);
-    localStorage.setItem("token", t);
-  };
-
-  // ── updateUser(): called after a profile save ───────────────────────────────
-  // Merges ONLY the provided fields — token and role are never touched.
-  // This is what StudentProfile + AdminProfile must use (not login()).
-  const updateUser = (partialData) => {
-    setUser(prev => {
-      const next = {
-        ...prev,
-        ...partialData,
-        _id: partialData._id || partialData.id || prev?._id,
-      };
-      localStorage.setItem("user", JSON.stringify(next));
-      return next;
-    });
-  };
-
-  // ── logout() ────────────────────────────────────────────────────────────────
-  const logout = _clear;
+  }, []);
 
   return (
-    <AuthContext.Provider value={{ user, role, token, loading, login, logout, updateUser }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        role,
+        token,
+        loading,
+        login,
+        logout,
+        updateUser,   // ← now exposed, fixes the crash in AdminProfile & StudentProfile
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

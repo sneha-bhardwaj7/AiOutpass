@@ -1,8 +1,15 @@
 // backend/controllers/authController.js
-const User = require("../models/User");
-const bcrypt = require("bcryptjs");
+//
+// ── ADDED: getAllStudents controller ──────────────────────────────────────────
+//    Returns every User document with role="student".
+//    Used by AdminParents so ALL registered students appear in the dropdown,
+//    not just those who have submitted an outpass request.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const User        = require("../models/User");
+const bcrypt      = require("bcryptjs");
 const generateToken = require("../utils/generateToken");
-const cloudinary = require("cloudinary").v2;
+const cloudinary  = require("cloudinary").v2;
 const streamifier = require("streamifier");
 
 // ── Configure Cloudinary ──────────────────────────────────────────────────────
@@ -12,15 +19,12 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Helper: upload buffer to Cloudinary and return secure URL
+// Helper: upload buffer → Cloudinary secure URL
 const uploadToCloudinary = (buffer, folder = "passgate/avatars") =>
   new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       { folder, resource_type: "image", transformation: [{ width: 400, height: 400, crop: "fill" }] },
-      (error, result) => {
-        if (error) reject(error);
-        else resolve(result.secure_url);
-      }
+      (error, result) => (error ? reject(error) : resolve(result.secure_url))
     );
     streamifier.createReadStream(buffer).pipe(stream);
   });
@@ -119,7 +123,6 @@ exports.loginUser = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
 
-    // Return FULL user profile so frontend can restore it after login
     res.json({
       id:         user._id,
       name:       user.name,
@@ -142,7 +145,7 @@ exports.loginUser = async (req, res) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// GET PROFILE  (used on app boot to rehydrate user from token)
+// GET PROFILE
 // ─────────────────────────────────────────────────────────────────────────────
 exports.getProfile = async (req, res) => {
   try {
@@ -155,7 +158,25 @@ exports.getProfile = async (req, res) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// UPDATE STUDENT PROFILE  (with Cloudinary avatar upload)
+// GET ALL STUDENTS  ← NEW
+// Called by admin to populate student dropdown in AdminParents.
+// Returns every registered student whether or not they've filed an outpass.
+// ─────────────────────────────────────────────────────────────────────────────
+exports.getAllStudents = async (req, res) => {
+  try {
+    const students = await User.find({ role: "student" })
+      .select("_id name studentId hostelRoom email phone department year")
+      .sort({ name: 1 });
+
+    res.json({ students });
+  } catch (error) {
+    console.error("getAllStudents error:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UPDATE STUDENT PROFILE
 // ─────────────────────────────────────────────────────────────────────────────
 exports.updateStudentProfile = async (req, res) => {
   try {
@@ -163,7 +184,6 @@ exports.updateStudentProfile = async (req, res) => {
 
     const updateData = { name, email, phone, bio, collegeId, hostelRoom, department, year };
 
-    // Upload new avatar to Cloudinary if provided
     if (req.file) {
       const url = await uploadToCloudinary(req.file.buffer, "passgate/students");
       updateData.avatar = url;
@@ -209,7 +229,7 @@ exports.changeStudentPassword = async (req, res) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// UPDATE ADMIN PROFILE  (with Cloudinary avatar upload)
+// UPDATE ADMIN PROFILE
 // ─────────────────────────────────────────────────────────────────────────────
 exports.updateAdminProfile = async (req, res) => {
   try {

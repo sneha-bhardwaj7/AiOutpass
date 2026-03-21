@@ -10,4 +10,6 @@ const parentSchema = new mongoose.Schema({
   addedBy:      { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // admin
 }, { timestamps: true });
 
+
+
 module.exports = mongoose.model("Parent", parentSchema);
