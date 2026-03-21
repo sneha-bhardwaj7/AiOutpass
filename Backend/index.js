@@ -17,8 +17,8 @@ const app = express();
 app.use(cors({
   origin: (origin, callback) => {
     const allowedOrigins = [
-      "http://localhost:5173", // frontend
-      "http://localhost:5000", // backend (if needed)
+      "https://passify-ai-eight.vercel.app/", // frontend
+      "https://passify-ai.onrender.com", // backend (if needed)
     ];
 
     // allow requests with no origin (like Postman / mobile / email links)
