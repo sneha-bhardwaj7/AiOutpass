@@ -1,6 +1,6 @@
 // src/services/api.js
 
-const BASE = import.meta.env.VITE_BACKEND_URL;
+const BASE = `${import.meta.env.VITE_BACKEND_URL}/api`;
 
 const authHeaders = () => ({
   "Content-Type": "application/json",
