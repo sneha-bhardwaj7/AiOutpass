@@ -1,18 +1,12 @@
 // backend/routes/parentRoutes.js
 //
-// ── FIX ───────────────────────────────────────────────────────────────────────
-//  BUG:  GET /api/parents/list returned ALL parents to every student.
-//        So when a student opened the outpass form, they saw every parent
-//        registered in the system — not just their own parents.
+// ── FIX: /list now matches parents to the logged-in student ──────────────────
+//  The student "sneha" has studentId "23030841" in the User model.
+//  The Parent document also has studentId "23030841" (set when admin added it).
+//  Filter: Parent.find({ studentId: req.user.studentId })
 //
-//  FIX:  Filter by the logged-in student's identity.
-//        The Parent model stores studentId (the college roll number string).
-//        The logged-in student has req.user.studentId (set at signup).
-//        We match Parent.studentId === req.user.studentId to return only
-//        parents linked to that specific student.
-//
-//        Fallback: if the student has no studentId set yet, also try matching
-//        by name so students who signed up without a roll number still work.
+//  Also added OR filter on studentName as fallback for older records where
+//  studentId may not have been saved correctly.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const express  = require("express");
@@ -32,7 +26,7 @@ router.post("/", protect, authRole("admin"), async (req, res) => {
   }
 });
 
-// ── Admin gets ALL parents (for the Parents management page) ──────────────────
+// ── Admin gets ALL parents ────────────────────────────────────────────────────
 router.get("/", protect, authRole("admin"), async (req, res) => {
   try {
     const parents = await Parent.find().sort({ createdAt: -1 });
@@ -52,8 +46,7 @@ router.delete("/:id", protect, authRole("admin"), async (req, res) => {
   }
 });
 
-// ── Admin gets ALL registered students ───────────────────────────────────────
-// Used by AdminParents dropdown to show every signed-up student.
+// ── Admin: get all registered students for dropdown ───────────────────────────
 router.get("/students", protect, authRole("admin"), async (req, res) => {
   try {
     const students = await User.find({ role: "student" })
@@ -66,36 +59,46 @@ router.get("/students", protect, authRole("admin"), async (req, res) => {
   }
 });
 
-// ── Student fetches ONLY THEIR OWN parents (for outpass form dropdown) ────────
-//
-// FIX: was → Parent.find()  — returned ALL parents in DB
-// NOW  → Parent.find({ studentId: req.user.studentId })
-//         returns only parents whose studentId matches the logged-in student
-//
+// ── Student: fetch ONLY their own parents ─────────────────────────────────────
 // Route: GET /api/parents/list
-// Auth:  any logged-in user (student calls this)
+//
+// How matching works:
+//   - Student logs in → req.user has { studentId, collegeId, name, _id }
+//   - Admin added parent with studentId = the roll number string (e.g. "23030841")
+//   - We match Parent.studentId against all possible ID fields on the student
+//   - Also match by studentName as fallback for legacy records
+//
+// NOTE: /list MUST be registered BEFORE /:id to avoid Express treating
+//       "list" as a dynamic :id param.
 router.get("/list", protect, async (req, res) => {
   try {
-    const student = req.user; // set by authMiddleware
+    const u = req.user;
 
-    // Build filter — match parents linked to this student's roll number
-    // studentId on the Parent model = the college roll number string stored
-    // when admin added the parent (e.g. "CS2021001")
-    const filter = {};
+    // Collect all possible identifiers this student might have
+    const possibleIds   = [u.studentId, u.collegeId].filter(Boolean);
+    const possibleNames = [u.name].filter(Boolean);
 
-    if (student.studentId) {
-      // Primary match: by studentId (college roll number)
-      filter.studentId = student.studentId;
-    } else if (student.collegeId) {
-      // Fallback: some students store roll number in collegeId field
-      filter.studentId = student.collegeId;
-    } else {
-      // Last resort: match by student name (less reliable but better than all)
-      filter.studentName = student.name;
+    console.log(`[/api/parents/list] user: ${u.name}, studentId: ${u.studentId}, collegeId: ${u.collegeId}`);
+
+    let parents = [];
+
+    if (possibleIds.length > 0) {
+      // Primary: match by studentId field stored on Parent document
+      parents = await Parent.find({
+        studentId: { $in: possibleIds },
+      }).select("name email phone relation studentName studentId");
+
+      console.log(`[/api/parents/list] matched by ID: ${parents.length}`);
     }
 
-    const parents = await Parent.find(filter)
-      .select("name email phone relation studentName studentId");
+    // Fallback: if nothing found by ID, try matching by name
+    if (parents.length === 0 && possibleNames.length > 0) {
+      parents = await Parent.find({
+        studentName: { $in: possibleNames },
+      }).select("name email phone relation studentName studentId");
+
+      console.log(`[/api/parents/list] matched by name: ${parents.length}`);
+    }
 
     res.json({ parents });
   } catch (err) {
