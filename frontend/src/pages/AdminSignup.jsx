@@ -56,7 +56,7 @@ export default function AdminSignup(){
     if(!canSubmit||loading)return;
     setLoading(true);setError('');
     try{
-      const res=await fetch(`${import.meta.env.REACT_VITE_APP_BACKEND_URL}/api/auth/admin/signup`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:form.name.trim(),email:form.email.trim().toLowerCase(),password:form.password})});
+      const res=await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/auth/admin/signup`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:form.name.trim(),email:form.email.trim().toLowerCase(),password:form.password})});
       const data=await res.json();
       if(!res.ok)throw new Error(data.message||'Signup failed');
       localStorage.setItem('token',data.token);

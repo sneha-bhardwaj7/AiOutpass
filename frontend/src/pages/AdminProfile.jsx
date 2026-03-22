@@ -21,7 +21,7 @@ import AdminLayout from '../components/AdminLayout';
 import { useAuth } from '../context/AuthContext';
 import { T, GCSS } from '../components/Pagebackground';
 
-const BASE_URL = import.meta.env.REACT_VITE_APP_BACKEND_URL || 'http://localhost:5000';
+const BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
 const CARD = {
   background:    'rgba(255,255,255,0.62)',

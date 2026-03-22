@@ -7,7 +7,7 @@ import { FiMail, FiLock, FiEye, FiEyeOff, FiArrowRight, FiLoader, FiUser } from 
 import { useAuth } from '../context/AuthContext';
 import PageBackground, { T, GCSS } from '../components/Pagebackground';
 
-const BASE_URL = import.meta.env.REACT_VITE_APP_BACKEND_URL || 'http://localhost:5000';
+const BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
 function Field({ label, icon: Icon, type = 'text', value, onChange, placeholder, rightEl }) {
   const [f, sF] = useState(false);

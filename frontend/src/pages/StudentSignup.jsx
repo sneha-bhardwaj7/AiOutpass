@@ -83,7 +83,7 @@ export default function StudentSignup(){
     setLoading(true);setError('');
     try{
       const payload={name:form.name.trim(),email:form.email.trim().toLowerCase(),password:form.password,studentId:form.collegeId.trim(),hostelRoom:form.hostelRoom.trim(),phone:form.phone.trim()||undefined};
-      const res=await fetch(`${import.meta.env.REACT_VITE_APP_BACKEND_URL}/api/auth/student/signup`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      const res=await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/auth/student/signup`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
       const data=await res.json();
       if(!res.ok)throw new Error(data.message||'Signup failed');
       localStorage.setItem('token',data.token);
