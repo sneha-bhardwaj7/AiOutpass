@@ -17,14 +17,14 @@ const app = express();
 app.use(cors({
   origin: (origin, callback) => {
     const allowedOrigins = [
-      "https://passify-ai-eight.vercel.app/", // frontend
-      "https://passify-ai.onrender.com", // backend (if needed)
+      "https://passify-ai-eight.vercel.app", // ✅ no slash
+      "http://localhost:5173",
     ];
 
-    // allow requests with no origin (like Postman / mobile / email links)
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
+      console.log("Blocked by CORS:", origin); // 👈 debug
       callback(new Error("CORS not allowed"));
     }
   },
