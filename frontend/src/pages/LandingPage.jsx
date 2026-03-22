@@ -230,12 +230,12 @@ function Hero() {
   const slide = slides[activeSlide];
 
   return (
-    <section style={{ minHeight: '80vh', position: 'relative', display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
+    <section style={{ minHeight: '60vh', position: 'relative', display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
       <div style={{
         position: 'relative', zIndex: 2,
         display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 52,
-        alignItems: 'center', padding: '118px 46px 78px',
-        maxWidth: 1180, margin: '0 auto', width: '100%',
+        alignItems: 'center', padding: '100px 46px 78px',
+        maxWidth: 1200, margin: '0 auto', width: '100%',
       }} className="hero-grid">
 
         {/* Left */}
