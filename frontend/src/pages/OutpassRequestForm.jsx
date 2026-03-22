@@ -44,7 +44,7 @@ export default function OutpassRequestForm(){
 
   useEffect(()=>{
     const token=localStorage.getItem('token');
-    fetch('/api/parents/list',{headers:{Authorization:`Bearer ${token}`}}).then(r=>r.json()).then(d=>setParentsList(d.parents||[])).catch(()=>setParentsList([]));
+    fetch(`${import.meta.env.VITE_BACKEND_URL}/api/parents/list`,{headers:{Authorization:`Bearer ${token}`}}).then(r=>r.json()).then(d=>setParentsList(d.parents||[])).catch(()=>setParentsList([]));
   },[]);
 
   const set=k=>e=>setForm(f=>({...f,[k]:e.target.value}));
@@ -62,7 +62,7 @@ export default function OutpassRequestForm(){
     const payload={studentName:form.studentName,studentId:form.studentId,hostelRoom:form.hostelRoom,destination:form.destination,reason:form.reason,leaveDateFrom:form.leaveDateFrom,leaveDateTo:form.leaveDateTo,parentRelation:form.parentRelation,parentContact:form.parentContact,parentEmail:form.parentEmail,...(form.timeFrom?{timeFrom:form.timeFrom}:{}),...(form.timeTo?{timeTo:form.timeTo}:{})};
     try{
       const token=localStorage.getItem('token');
-      const res=await fetch('/api/outpass/apply',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify(payload)});
+      const res=await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/outpass/apply`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify(payload)});
       const ct=res.headers.get('content-type')||'';
       if(!ct.includes('application/json')){const t=await res.text();throw new Error(t.startsWith('<!DOCTYPE')?'Backend not reachable':`Unexpected response (${res.status})`);}
       const data=await res.json();

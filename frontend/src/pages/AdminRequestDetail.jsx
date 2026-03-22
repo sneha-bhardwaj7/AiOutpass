@@ -77,7 +77,7 @@ export default function AdminRequestDetail() {
   // ── Fetch once for this request ID ─────────────────────────────────────────
   useEffect(() => {
     const token = localStorage.getItem("token");
-    fetch("/api/outpass/admin/all", { headers:{ Authorization:`Bearer ${token}` } })
+    fetch(`${import.meta.env.VITE_BACKEND_URL}/api/outpass/admin/all`, { headers:{ Authorization:`Bearer ${token}` } })
       .then(r  => r.json())
       .then(data => {
         const found = data.outpasses?.find(o => o._id === id);
@@ -92,7 +92,7 @@ export default function AdminRequestDetail() {
     setDeciding(true); setError("");
     try {
       const token = localStorage.getItem("token");
-      const res   = await fetch(`/api/outpass/admin/decision/${id}`, {
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/outpass/admin/decision/${id}`, {
         method:"PATCH",
         headers:{ "Content-Type":"application/json", Authorization:`Bearer ${token}` },
         body:JSON.stringify({ decision, adminNote:note }),

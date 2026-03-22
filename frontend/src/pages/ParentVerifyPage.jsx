@@ -152,8 +152,9 @@ export default function ParentVerifyPage() {
     fd.append("photo",    photo,     "photo.jpg");
     fd.append("video",    videoBlob, "video.webm");
 
+    
     try {
-      const res  = await fetch(`/api/outpass/verify/${id}`, { method: "POST", body: fd });
+      const res  = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/outpass/verify/${id}`, { method: "POST", body: fd });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || `Server error (${res.status})`);
       setStep("done");

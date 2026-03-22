@@ -39,7 +39,7 @@ function SingleOutpass({id}){
     setLoading(true);
     try{
       const token=localStorage.getItem('token');
-      const res=await fetch('/api/outpass/my-passes',{headers:{Authorization:`Bearer ${token}`}});
+      const res=await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/outpass/my-passes`,{headers:{Authorization:`Bearer ${token}`}});
       const data=await res.json();
       const found=data.outpasses?.find(o=>o._id===id);
       if(found)setOutpass(found);else setError('Outpass not found.');
@@ -143,7 +143,7 @@ function AllOutpasses(){
   const load=async()=>{
     try{
       const token=localStorage.getItem('token');
-      const res=await fetch('/api/outpass/my-passes',{headers:{Authorization:`Bearer ${token}`}});
+      const res=await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/outpass/my-passes`,{headers:{Authorization:`Bearer ${token}`}});
       const data=await res.json();
       setOutpasses(data.outpasses||[]);
     }catch{}finally{setLoading(false);setRefreshing(false);}

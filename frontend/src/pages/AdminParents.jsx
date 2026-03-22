@@ -165,7 +165,7 @@ export default function AdminParents() {
   // ── Load registered parents ─────────────────────────────────────────────────
   const load = async () => {
     try {
-      const res  = await fetch("/api/parents", {
+      const res  = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/parents`, {
         headers: { Authorization: `Bearer ${token()}` },
       });
       const data = await res.json();
@@ -185,9 +185,12 @@ export default function AdminParents() {
   const loadStudents = async () => {
     setStudentsErr("");
     try {
-      const res = await fetch("/api/auth/students", {
-        headers: { Authorization: `Bearer ${token()}` },
-      });
+      const res = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/api/auth/students`,
+        {
+          headers: { Authorization: `Bearer ${token()}` },
+        }
+      );
 
       // Read raw text first so we can show a useful error if it's HTML
       const text = await res.text();
@@ -228,7 +231,7 @@ export default function AdminParents() {
     }
     setAdding(true);
     try {
-      const res = await fetch("/api/parents", {
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/parents`, {
         method:  "POST",
         headers: { "Content-Type":"application/json", Authorization:`Bearer ${token()}` },
         body: JSON.stringify({
@@ -254,7 +257,7 @@ export default function AdminParents() {
   const handleDelete = async id => {
     if (!confirm("Remove this parent?")) return;
     try {
-      await fetch(`/api/parents/${id}`, {
+      await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/parents/${id}`, {
         method:  "DELETE",
         headers: { Authorization: `Bearer ${token()}` },
       });

@@ -15,10 +15,14 @@ export default function StudentDashboard() {
   const [requests, setRequests] = useState([]);
   const [loading,  setLoading]  = useState(true);
 
+
+  const BASE_URL = import.meta.env.VITE_BACKEND_URL;
+
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) { setLoading(false); return; }
-    fetch('/api/outpass/my-passes', { headers: { Authorization: `Bearer ${token}` } })
+    fetch(`${BASE_URL}/api/outpass/my-passes`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json()).then(d => setRequests(d.outpasses || []))
       .catch(() => setRequests([])).finally(() => setLoading(false));
   }, []);
