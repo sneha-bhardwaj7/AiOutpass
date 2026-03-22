@@ -60,6 +60,10 @@ function SN({ value, loading, color, size="40px" }) {
   );
 }
 
+
+const BASE_URL = import.meta.env.VITE_BACKEND_URL;
+
+
 export default function AdminDashboard() {
   const [stats,      setStats]      = useState(null);
   const [recent,     setRecent]     = useState([]);
