@@ -49,25 +49,116 @@ export default function AdminRequests() {
       `}</style>
 
       <div style={{ display:'flex', flexWrap:'wrap', alignItems:'center', justifyContent:'space-between', gap:12, marginBottom:20 }}>
-        <div style={{ display:'flex', flexWrap:'wrap', alignItems:'center', gap:8 }}>
-          <div style={{ display:'flex', alignItems:'center', gap:6, padding:'6px 12px', background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:10 }}>
-            <Filter size={12} style={{ color:C.slateText }}/>
-            <span style={{ fontSize:10, fontWeight:700, color:C.slateText, fontFamily:'DM Mono,monospace', letterSpacing:'0.15em', textTransform:'uppercase' }}>Filter</span>
-          </div>
-          {STATUS_FILTERS.map(({ key, label, accent, bg, border }) => {
-            const isActive = activeFilter === key;
-            const count = key === "all" ? allRequests.length : allRequests.filter(r => r.status === key).length;
-            return (
-              <button key={key} onClick={() => setActiveFilter(key)} className="ft"
-                style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:10, fontSize:12, fontWeight:isActive?700:600, fontFamily:'DM Sans,sans-serif', background:isActive?bg:'rgba(255,255,255,0.04)', color:isActive?accent:'rgba(220,230,255,0.5)', border:`1px solid ${isActive?border:'rgba(255,255,255,0.08)'}`, cursor:'pointer', boxShadow:isActive?`0 4px 16px ${accent}20`:'none' }}>
-                {label}
-                {key !== "all" && count > 0 && (
-                  <span style={{ display:'inline-flex', alignItems:'center', justifyContent:'center', minWidth:18, height:18, borderRadius:100, background:isActive?`${accent}25`:'rgba(255,255,255,0.07)', color:isActive?accent:'rgba(220,230,255,0.4)', fontSize:9, fontWeight:800, fontFamily:'DM Mono,monospace', padding:'0 5px' }}>{count}</span>
-                )}
-              </button>
-            );
-          })}
-        </div>
+       <div style={{ display:'flex', flexWrap:'wrap', alignItems:'center', gap:8 }}>
+  
+  {/* Filter Label */}
+  <div
+    style={{
+      display:'flex',
+      alignItems:'center',
+      gap:6,
+      padding:'6px 12px',
+      background:'rgba(255,255,255,0.08)',
+      border:'1px solid rgba(255,255,255,0.15)',
+      borderRadius:10
+    }}
+  >
+    <Filter size={12} style={{ color:C.slateText }}/>
+    <span
+      style={{
+        fontSize:10,
+        fontWeight:700,
+        color:C.slateText,
+        fontFamily:'DM Mono,monospace',
+        letterSpacing:'0.15em',
+        textTransform:'uppercase'
+      }}
+    >
+      Filter
+    </span>
+  </div>
+
+  {/* Buttons */}
+  {STATUS_FILTERS.map(({ key, label, accent }) => {
+    const isActive = activeFilter === key;
+
+    const count =
+      key === "all"
+        ? allRequests.length
+        : allRequests.filter(r => r.status === key).length;
+
+    return (
+      <button
+        key={key}
+        onClick={() => setActiveFilter(key)}
+        className="ft"
+        style={{
+          display:'flex',
+          alignItems:'center',
+          gap:6,
+          padding:'8px 16px',
+          borderRadius:12,
+          fontSize:12,
+          fontWeight:isActive ? 700 : 600,
+          fontFamily:'DM Sans,sans-serif',
+
+          // ✅ FIXED VISIBILITY
+          background: isActive
+            ? `linear-gradient(135deg, ${accent}, ${accent}cc)`
+            : 'rgba(255,255,255,0.12)',
+
+          color: isActive
+            ? '#ffffff'
+            : 'rgba(255,255,255,0.85)',
+
+          border: isActive
+            ? `1px solid ${accent}`
+            : '1px solid rgba(255,255,255,0.2)',
+
+          cursor:'pointer',
+
+          // ✨ POP EFFECT
+          boxShadow: isActive
+            ? `0 6px 20px ${accent}40`
+            : '0 2px 6px rgba(0,0,0,0.1)',
+
+          backdropFilter:'blur(6px)',
+
+          transition:'all 0.25s ease'
+        }}
+      >
+        {label}
+
+        {/* Count Badge */}
+        {key !== "all" && count > 0 && (
+          <span
+            style={{
+              display:'inline-flex',
+              alignItems:'center',
+              justifyContent:'center',
+              minWidth:18,
+              height:18,
+              borderRadius:100,
+
+              background: isActive
+                ? 'rgba(255,255,255,0.25)'
+                : 'rgba(255,255,255,0.15)',
+
+              color:'#fff',
+
+              fontSize:9,
+              fontWeight:800,
+              fontFamily:'DM Mono,monospace',
+              padding:'0 5px'
+            }}
+          >
+            {count}
+          </span>
+        )}
+      </button>
+    );
+  })}
+</div>
         <button onClick={() => { setRefreshing(true); fetchRequests(); }} disabled={refreshing}
           style={{ display:'flex', alignItems:'center', gap:6, padding:'8px 16px', fontSize:12, fontWeight:600, fontFamily:'DM Sans,sans-serif', background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:10, cursor:'pointer', color:C.slateText, opacity:refreshing?0.55:1, transition:'all 0.2s' }}
           onMouseEnter={e => { e.currentTarget.style.borderColor = '#A23B88'; e.currentTarget.style.color = '#A23B88'; }}
