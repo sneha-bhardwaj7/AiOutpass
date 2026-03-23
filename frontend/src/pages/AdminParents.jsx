@@ -1,15 +1,13 @@
 // src/pages/AdminParents.jsx
 //
-// ── FINAL FIX ─────────────────────────────────────────────────────────────────
-//  All fetch() calls now use relative /api/... paths.
-//  vite.config.js proxy forwards them to http://localhost:5000.
-//  loadStudents() calls GET /api/auth/students which is registered in
-//  authRoutes.js and returns ALL role="student" users from MongoDB.
+// ── KEY FIX ───────────────────────────────────────────────────────────────────
+//  handleAdd now sends studentUserId: form.linkedStudentId in the POST body.
+//  linkedStudentId = the student's MongoDB _id (set when admin picks from dropdown).
+//  Backend saves this as Parent.studentUserId.
+//  /list route matches by studentUserId === req.user._id (100% reliable).
 //
-//  Root cause of "Enrolled Students: 0":
-//  - No Vite proxy existed → fetch("/api/auth/students") hit Vite → HTML 404
-//  - JSON.parse(HTML) threw → catch set students=[] silently
-//  - Fix: add proxy in vite.config.js + use relative paths here
+//  This fixes the root cause: string studentId was "" for many students
+//  because they signed up without entering a roll number, so no parent ever matched.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useEffect, useState } from "react";
@@ -21,7 +19,8 @@ import {
 import AdminLayout from "../components/AdminLayout";
 import { T, GCSS } from "../components/Pagebackground";
 
-/* ── Relation colour map ── */
+const BASE = import.meta.env.VITE_BACKEND_URL || "http://localhost:5080";
+
 const relColors = {
   Father:   { color:T.bright,  bg:`rgba(139,123,200,0.12)`, border:`rgba(139,123,200,0.26)` },
   Mother:   { color:T.mid,     bg:`rgba(107,90,176,0.12)`,  border:`rgba(107,90,176,0.26)`  },
@@ -75,8 +74,13 @@ function inputSt(focused) {
 function groupByStudent(parents) {
   const map = {};
   parents.forEach(p => {
-    const key = p.studentId || "unlinked";
-    if (!map[key]) map[key] = { studentId:p.studentId||"—", studentName:p.studentName||"Unlinked", parents:[] };
+    // Group by studentUserId first, fall back to studentId string
+    const key = String(p.studentUserId || p.studentId || "unlinked");
+    if (!map[key]) map[key] = {
+      studentId:   p.studentId || "—",
+      studentName: p.studentName || "Unlinked",
+      parents: [],
+    };
     map[key].parents.push(p);
   });
   return Object.values(map).sort((a, b) => {
@@ -86,7 +90,6 @@ function groupByStudent(parents) {
   });
 }
 
-/* ── Student group accordion ── */
 function StudentGroup({ group, idx, onDelete }) {
   const [open, setOpen] = useState(true);
   const av = avPalette[idx % avPalette.length];
@@ -143,7 +146,6 @@ function StudentGroup({ group, idx, onDelete }) {
   );
 }
 
-/* ── Main page ── */
 export default function AdminParents() {
   const [parents,       setParents]       = useState([]);
   const [students,      setStudents]      = useState([]);
@@ -162,10 +164,9 @@ export default function AdminParents() {
 
   const token = () => localStorage.getItem("token");
 
-  // ── Load registered parents ─────────────────────────────────────────────────
   const load = async () => {
     try {
-      const res  = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/parents`, {
+      const res  = await fetch(`${BASE}/api/parents`, {
         headers: { Authorization: `Bearer ${token()}` },
       });
       const data = await res.json();
@@ -179,45 +180,27 @@ export default function AdminParents() {
     }
   };
 
-  // ── Load ALL students from User collection via /api/auth/students ───────────
-  // Requires vite.config.js proxy: /api → http://localhost:5000
-  // Route defined in authRoutes.js: GET /api/auth/students → getAllStudents
   const loadStudents = async () => {
     setStudentsErr("");
     try {
-      const res = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/api/auth/students`,
-        {
-          headers: { Authorization: `Bearer ${token()}` },
-        }
-      );
-
-      // Read raw text first so we can show a useful error if it's HTML
+      const res  = await fetch(`${BASE}/api/auth/students`, {
+        headers: { Authorization: `Bearer ${token()}` },
+      });
       const text = await res.text();
       let data;
-      try {
-        data = JSON.parse(text);
-      } catch {
-        // If we get here, Vite returned an HTML error page — proxy not working
-        console.error("Non-JSON response from /api/auth/students:", text.slice(0, 300));
-        throw new Error("Proxy not configured. Add proxy to vite.config.js and restart npm run dev.");
-      }
-
+      try { data = JSON.parse(text); }
+      catch { throw new Error("Non-JSON from /api/auth/students"); }
       if (!res.ok) throw new Error(data.message || `HTTP ${res.status}`);
-
-      // Map API response to component shape
-      // studentId field stores the college roll number (set during signup)
-      const list = (data.students || []).map(s => ({
-        _id:         s._id,
+      // Include _id as linkedStudentId — this is the key fix
+      setStudents((data.students || []).map(s => ({
+        _id:         s._id,          // ← MongoDB ObjectId
         studentName: s.name,
         studentId:   s.studentId || s.collegeId || "",
         hostelRoom:  s.hostelRoom || "",
         email:       s.email || "",
-      }));
-
-      setStudents(list);
+      })));
     } catch (e) {
-      console.error("loadStudents error:", e.message);
+      console.error("loadStudents:", e.message);
       setStudentsErr(e.message);
       setStudents([]);
     }
@@ -229,9 +212,12 @@ export default function AdminParents() {
     if (!form.name || !form.email || !form.phone || !form.relation) {
       alert("Fill all required fields"); return;
     }
+    if (!form.linkedStudentId) {
+      alert("Please select a student from the dropdown"); return;
+    }
     setAdding(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/parents`, {
+      const res = await fetch(`${BASE}/api/parents`, {
         method:  "POST",
         headers: { "Content-Type":"application/json", Authorization:`Bearer ${token()}` },
         body: JSON.stringify({
@@ -241,6 +227,7 @@ export default function AdminParents() {
           relation:    form.relation,
           studentName: form.studentName,
           studentId:   form.studentId,
+          studentUserId: form.linkedStudentId,  // ← KEY FIX: send MongoDB _id
         }),
       });
       if (!res.ok) { const d = await res.json(); throw new Error(d.message); }
@@ -257,14 +244,12 @@ export default function AdminParents() {
   const handleDelete = async id => {
     if (!confirm("Remove this parent?")) return;
     try {
-      await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/parents/${id}`, {
+      await fetch(`${BASE}/api/parents/${id}`, {
         method:  "DELETE",
         headers: { Authorization: `Bearer ${token()}` },
       });
       setParents(p => p.filter(x => x._id !== id));
-    } catch {
-      alert("Failed to delete");
-    }
+    } catch { alert("Failed to delete"); }
   };
 
   const filtered = parents.filter(p => {
@@ -277,7 +262,7 @@ export default function AdminParents() {
     );
   });
   const groups    = groupByStudent(filtered);
-  const canSubmit = !!(form.name && form.email && form.phone && !adding);
+  const canSubmit = !!(form.name && form.email && form.phone && form.linkedStudentId && !adding);
 
   const ff  = k => setFormFocus(f => ({ ...f, [k]:true  }));
   const fbl = k => setFormFocus(f => ({ ...f, [k]:false }));
@@ -301,14 +286,12 @@ export default function AdminParents() {
             <p style={{ fontSize:12, color:T.inkSoft }}>Only registered parents can approve outpass requests.</p>
           </div>
           <div style={{ display:"flex", gap:10 }}>
-            <button
-              onClick={() => { setRefreshing(true); setLoading(true); load(); loadStudents(); }}
+            <button onClick={() => { setRefreshing(true); setLoading(true); load(); loadStudents(); }}
               disabled={refreshing} className="top-btn"
               style={{ display:"flex", alignItems:"center", gap:6, padding:"9px 16px", fontSize:13, fontWeight:600, background:"rgba(255,255,255,0.62)", border:`1.5px solid ${T.border}`, borderRadius:12, cursor:"pointer", color:T.inkSoft, opacity:refreshing?0.55:1, backdropFilter:"blur(14px)" }}>
               <RefreshCw size={13} style={{ animation:refreshing?"spin2 0.9s linear infinite":"none" }}/> Refresh
             </button>
-            <button
-              onClick={() => setShowForm(s => !s)} className="add-btn"
+            <button onClick={() => setShowForm(s => !s)} className="add-btn"
               style={{ display:"flex", alignItems:"center", gap:7, padding:"9px 18px", fontSize:13, fontWeight:700, background:`linear-gradient(135deg,${T.deep},${T.mid})`, border:"none", borderRadius:12, cursor:"pointer", color:"#fff", boxShadow:`0 4px 16px rgba(91,74,155,0.30)` }}>
               <UserPlus size={15}/>{showForm ? "Cancel" : "Add Parent"}
             </button>
@@ -320,7 +303,7 @@ export default function AdminParents() {
           {[
             { val:parents.length,                         label:"Total Parents",     icon:<Users size={13}/>,        accent:T.mid     },
             { val:students.length,                        label:"Enrolled Students", icon:<GraduationCap size={13}/>,accent:T.bright  },
-            { val:parents.filter(p=>p.studentId).length, label:"Linked",            icon:<User size={13}/>,         accent:T.ok      },
+            { val:parents.filter(p=>p.studentUserId||p.studentId).length, label:"Linked", icon:<User size={13}/>, accent:T.ok },
             { val:groups.length,                          label:"Student Groups",    icon:<Home size={13}/>,         accent:"#B07A10" },
           ].map(s => (
             <div key={s.label} className="stat-chip">
@@ -339,7 +322,7 @@ export default function AdminParents() {
             <div style={{ position:"absolute", top:0, left:0, right:0, height:3, background:`linear-gradient(90deg,${T.deep},${T.mid},${T.bright})` }}/>
             <p style={{ fontWeight:800, fontSize:17, color:T.ink, marginBottom:4 }}>Add New Parent</p>
             <p style={{ fontSize:12, color:T.inkSoft, marginBottom:20, lineHeight:1.7 }}>
-              Link a parent to a specific enrolled student. They will receive outpass approval notifications.
+              Link a parent to a specific enrolled student.
             </p>
 
             {/* Student selector */}
@@ -347,24 +330,25 @@ export default function AdminParents() {
               <label style={{ display:"block", fontSize:10, fontWeight:700, letterSpacing:"0.18em", textTransform:"uppercase", color:T.mid, marginBottom:8 }}>
                 Select Enrolled Student * ({students.length} registered)
               </label>
-
               {studentsErr && (
                 <div style={{ padding:"10px 14px", background:T.errBg, border:`1px solid ${T.errBd}`, borderRadius:10, marginBottom:10, fontSize:12, color:T.err }}>
                   ⚠️ {studentsErr}
                 </div>
               )}
-
               {students.length === 0 && !studentsErr ? (
-                <p style={{ fontSize:13, color:T.inkSoft }}>
-                  No students registered yet.
-                </p>
-              ) : students.length > 0 ? (
+                <p style={{ fontSize:13, color:T.inkSoft }}>No students registered yet.</p>
+              ) : (
                 <select
                   defaultValue=""
                   onChange={e => {
                     const s = students.find(x => x._id === e.target.value);
-                    if (s) setForm(f => ({ ...f, linkedStudentId:s._id, studentName:s.studentName, studentId:s.studentId }));
-                    else   setForm(f => ({ ...f, linkedStudentId:"", studentName:"", studentId:"" }));
+                    if (s) setForm(f => ({
+                      ...f,
+                      linkedStudentId: s._id,          // MongoDB ObjectId ← KEY
+                      studentName:     s.studentName,
+                      studentId:       s.studentId,
+                    }));
+                    else setForm(f => ({ ...f, linkedStudentId:"", studentName:"", studentId:"" }));
                   }}
                   style={{ ...inputSt(formFocus.student), appearance:"none" }}
                   onFocus={() => ff("student")} onBlur={() => fbl("student")}>
@@ -377,8 +361,7 @@ export default function AdminParents() {
                     </option>
                   ))}
                 </select>
-              ) : null}
-
+              )}
               {form.studentName && (
                 <div style={{ display:"flex", alignItems:"center", gap:6, marginTop:8, padding:"6px 11px", background:T.okBg, border:`1px solid ${T.okBd}`, borderRadius:9, fontSize:12, fontWeight:600, color:T.ok }}>
                   ✓ Selected: {form.studentName}{form.studentId ? ` (${form.studentId})` : ""}
@@ -428,7 +411,7 @@ export default function AdminParents() {
           </div>
         )}
 
-        {/* Search bar */}
+        {/* Search */}
         {parents.length > 0 && (
           <div style={{ position:"relative", marginBottom:18 }}>
             <Search size={13} style={{ position:"absolute", left:13, top:"50%", transform:"translateY(-50%)", color:T.inkDim, pointerEvents:"none" }}/>
@@ -468,7 +451,7 @@ export default function AdminParents() {
               </p>
             </div>
             {groups.map((group, idx) => (
-              <StudentGroup key={group.studentId} group={group} idx={idx} onDelete={handleDelete}/>
+              <StudentGroup key={String(group.studentId)} group={group} idx={idx} onDelete={handleDelete}/>
             ))}
           </div>
         )}

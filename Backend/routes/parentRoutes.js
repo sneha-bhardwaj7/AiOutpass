@@ -1,12 +1,12 @@
 // backend/routes/parentRoutes.js
 //
-// ── FIX: /list now matches parents to the logged-in student ──────────────────
-//  The student "sneha" has studentId "23030841" in the User model.
-//  The Parent document also has studentId "23030841" (set when admin added it).
-//  Filter: Parent.find({ studentId: req.user.studentId })
+// ── PERMANENT FIX ─────────────────────────────────────────────────────────────
+//  Root cause: parents were linked to students by a string studentId field.
+//  If studentId was empty, mistyped, or not set at signup → no match → 0 parents.
 //
-//  Also added OR filter on studentName as fallback for older records where
-//  studentId may not have been saved correctly.
+//  Fix: now saves studentUserId (MongoDB ObjectId) when admin adds a parent.
+//  /list matches by req.user._id === parent.studentUserId (always reliable).
+//  Fallback to string studentId and name for legacy records.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const express  = require("express");
@@ -17,9 +17,21 @@ const protect  = require("../middleware/authMiddleware");
 const authRole = require("../middleware/roleMiddleware");
 
 // ── Admin adds a parent ───────────────────────────────────────────────────────
+// Now saves studentUserId from req.body.studentUserId (sent by AdminParents.jsx)
 router.post("/", protect, authRole("admin"), async (req, res) => {
   try {
-    const parent = await Parent.create({ ...req.body, addedBy: req.user._id });
+    const {
+      name, email, phone, relation,
+      studentName, studentId,
+      studentUserId,   // ← NEW: MongoDB _id of the student User
+    } = req.body;
+
+    const parent = await Parent.create({
+      name, email, phone, relation,
+      studentName, studentId,
+      studentUserId: studentUserId || null,
+      addedBy: req.user._id,
+    });
     res.status(201).json({ message: "Parent added", parent });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -46,7 +58,7 @@ router.delete("/:id", protect, authRole("admin"), async (req, res) => {
   }
 });
 
-// ── Admin: get all registered students for dropdown ───────────────────────────
+// ── Admin: all registered students ───────────────────────────────────────────
 router.get("/students", protect, authRole("admin"), async (req, res) => {
   try {
     const students = await User.find({ role: "student" })
@@ -54,53 +66,59 @@ router.get("/students", protect, authRole("admin"), async (req, res) => {
       .sort({ name: 1 });
     res.json({ students });
   } catch (err) {
-    console.error("GET /api/parents/students error:", err.message);
     res.status(500).json({ message: err.message });
   }
 });
 
-// ── Student: fetch ONLY their own parents ─────────────────────────────────────
-// Route: GET /api/parents/list
-//
-// How matching works:
-//   - Student logs in → req.user has { studentId, collegeId, name, _id }
-//   - Admin added parent with studentId = the roll number string (e.g. "23030841")
-//   - We match Parent.studentId against all possible ID fields on the student
-//   - Also match by studentName as fallback for legacy records
-//
-// NOTE: /list MUST be registered BEFORE /:id to avoid Express treating
-//       "list" as a dynamic :id param.
+// ── No-auth debug (remove after confirming fix) ───────────────────────────────
+router.get("/open-debug", async (req, res) => {
+  try {
+    const allParents  = await Parent.find().lean();
+    const allStudents = await User.find({ role: "student" })
+      .select("_id name studentId collegeId email").lean();
+    res.json({ students: allStudents, parents: allParents });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ── Student: ONLY their own parents ──────────────────────────────────────────
+// /list MUST stay before /:id
 router.get("/list", protect, async (req, res) => {
   try {
     const u = req.user;
 
-    // Collect all possible identifiers this student might have
-    const possibleIds   = [u.studentId, u.collegeId].filter(Boolean);
-    const possibleNames = [u.name].filter(Boolean);
+    const allParents = await Parent.find()
+      .select("name email phone relation studentName studentId studentUserId")
+      .lean();
 
-    console.log(`[/api/parents/list] user: ${u.name}, studentId: ${u.studentId}, collegeId: ${u.collegeId}`);
+    const myParents = allParents.filter(p => {
+      // PRIMARY: match by MongoDB ObjectId (most reliable)
+      if (p.studentUserId && String(p.studentUserId) === String(u._id)) {
+        return true;
+      }
 
-    let parents = [];
+      // FALLBACK 1: match by studentId string (case-insensitive)
+      const pId    = String(p.studentId   || "").trim().toLowerCase();
+      const uId1   = String(u.studentId   || "").trim().toLowerCase();
+      const uId2   = String(u.collegeId   || "").trim().toLowerCase();
+      if (pId && (pId === uId1 || pId === uId2)) {
+        return true;
+      }
 
-    if (possibleIds.length > 0) {
-      // Primary: match by studentId field stored on Parent document
-      parents = await Parent.find({
-        studentId: { $in: possibleIds },
-      }).select("name email phone relation studentName studentId");
+      // FALLBACK 2: match by student name (case-insensitive)
+      const pName = String(p.studentName || "").trim().toLowerCase();
+      const uName = String(u.name        || "").trim().toLowerCase();
+      if (pName && uName && pName === uName) {
+        return true;
+      }
 
-      console.log(`[/api/parents/list] matched by ID: ${parents.length}`);
-    }
+      return false;
+    });
 
-    // Fallback: if nothing found by ID, try matching by name
-    if (parents.length === 0 && possibleNames.length > 0) {
-      parents = await Parent.find({
-        studentName: { $in: possibleNames },
-      }).select("name email phone relation studentName studentId");
+    console.log(`[/list] student="${u.name}" _id="${u._id}" → ${myParents.length} parents matched`);
 
-      console.log(`[/api/parents/list] matched by name: ${parents.length}`);
-    }
-
-    res.json({ parents });
+    res.json({ parents: myParents });
   } catch (err) {
     console.error("GET /api/parents/list error:", err.message);
     res.status(500).json({ message: err.message });

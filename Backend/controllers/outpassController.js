@@ -5,7 +5,7 @@ const axios      = require("axios");
 const multer     = require("multer");
 const cloudinary = require("../config/cloudinary");
 
-const N8N_WEBHOOK = process.env.N8N_WEBHOOK_URL || "http://localhost:5678/webhook/outpass-request";
+const N8N_WEBHOOK = process.env.N8N_WEBHOOK_URL || "https://n8n-service.onrender.com/webhook/outpass-request";
 
 const storage = multer.memoryStorage();
 const upload  = multer({ storage });
